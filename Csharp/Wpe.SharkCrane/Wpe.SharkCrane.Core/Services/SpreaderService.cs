@@ -41,8 +41,15 @@ namespace Wpe.SharkCrane.Core.Services
 
         private void ChangeMainProperties(Spreader messageSpreader)
         {
-            mainSpreader.IsLocked = messageSpreader.IsLocked;
-            mainSpreader.Width += messageSpreader.Width;
+            if (mainSpreader != null)
+            {
+                mainSpreader.IsLocked = messageSpreader.IsLocked;
+                mainSpreader.Width += messageSpreader.Width;
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(mainSpreader));
+            }
         }
 
     }
