@@ -1,25 +1,23 @@
-#
-# Copyright 2021 HiveMQ GmbH
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 import time
 import paho.mqtt.client as paho
 from paho import mqtt
+import keyboard  
 
-# setting callbacks for different events to see if it works, print the message etc.
+# Mapping subscription topics to their respective mapped names
+TOPIC_MAPPING = {
+    "/joystick/gantry": "/hub/joystick/gantry",
+    "/joystick/hoist": "/hub/joystick/hoist",
+    "/joystick/trolley": "/hub/joystick/trolley",
+    "/joystick/emergency-stop": "/hub/joystick/emergency-stop",
+    "/joystick/handbrake": "/hub/joystick/handbrake"
+}
+
+# Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
     print("CONNACK received with code %s." % rc)
+    # Subscribe to /hub/joystick/hoist
+    client.subscribe("/hub/joystick/hoist", qos=1)
+    print("Subscribed to /hub/joystick/hoist")
 
 # with this callback you can see if your publish was successful
 def on_publish(client, userdata, mid, properties=None):
@@ -31,32 +29,37 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 
 # print message, useful for checking if it was successful
 def on_message(client, userdata, msg):
-    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
+    print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
 
-# using MQTT version 5 here, for 3.1.1: MQTTv311, 3.1: MQTTv31
-# userdata is user defined data of any type, updated by user_data_set()
-# client_id is the given name of the client
+# Method to send message to /joystick/hoist when the '1' key is held down
+def hoist_joystick(client):
+    while True:
+        key_pressed = False
+        if keyboard.is_pressed('1'):
+            key_pressed = True
+            message = "joystick hoist active"
+            client.publish("/joystick/hoist", payload=message, qos=1)
+            print(f"Sent message to /joystick/hoist: {message}")
+            time.sleep(1)
+        elif not key_pressed:
+            print("Waiting for '1' key press...")
+
+
+# Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
+
+# Set callbacks
 client.on_connect = on_connect
-
-# enable TLS for secure connection
-client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
-# set username and password
-client.username_pw_set("YOUR_USERNAME", "YOUR_PASSWORD")
-# connect to HiveMQ Cloud on port 8883 (default for MQTT)
-client.connect("YOUR_CLUSTER_URL", 8883)
-
-# setting callbacks, use separate functions like above for better visibility
+client.on_publish = on_publish
 client.on_subscribe = on_subscribe
 client.on_message = on_message
-client.on_publish = on_publish
 
-# subscribe to all topics of encyclopedia by using the wildcard "#"
-client.subscribe("encyclopedia/#", qos=1)
+client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
 
-# a single publish, this can also be done in loops, etc.
-client.publish("encyclopedia/temperature", payload="hot", qos=1)
+client.username_pw_set("shark", "FishFish1")
 
-# loop_forever for simplicity, here you need to stop the loop manually
-# you can also use loop_start and loop_stop
-client.loop_forever()
+client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
+
+client.loop_start()
+
+hoist_joystick(client)
