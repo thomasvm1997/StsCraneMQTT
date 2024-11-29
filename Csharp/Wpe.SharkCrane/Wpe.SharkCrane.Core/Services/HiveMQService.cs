@@ -36,7 +36,7 @@ namespace Wpe.SharkCrane.Core.Services
         {
             await _client.ConnectAsync().ConfigureAwait(false);
 
-            _client.OnMessageReceived += (sender, args) =>
+            _client.OnMessageReceived += async (sender, args) =>
             {
                 //var receivedPayload = args.PublishMessage.PayloadAsString;
                 //var spreader = JsonSerializer.Deserialize<Spreader>(receivedPayload);
@@ -45,7 +45,7 @@ namespace Wpe.SharkCrane.Core.Services
 
 
                 MessageReceived?.Invoke(this, new CustomMessageReceivedEventArgs(args.PublishMessage.PayloadAsString));
-
+                
             };
         }
 

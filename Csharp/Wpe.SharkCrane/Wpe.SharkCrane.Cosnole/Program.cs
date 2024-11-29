@@ -24,12 +24,14 @@ Console.WriteLine("Hello, World!");
 await hiveClient.SubscribeAsync("/hub/spreader");
 
 
-var spreader = new Spreader { IsLocked = true, Width = 1m };
-var spreaderString = JsonSerializer.Serialize(spreader); // Mock spreader info van hub
+var spreader = new Spreader { IsLocked = true, Width = 1d };
+var spreaderString = JsonSerializer.Serialize(spreader); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
 while(true)
 {
-    await Task.Delay(1000);
-    await hiveClient.PublishAsync("/hub/spreader", spreaderString); //mocken om data te verkijgen van hub
-                                                                    //We doen alsof we een message krijgen.
     Console.WriteLine("listening");
+    
+    await hiveClient.PublishAsync("/hub/spreader", spreaderString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+                                                                    //We doen alsof we een message krijgen.
+    await Task.Delay(1000);
+
 }

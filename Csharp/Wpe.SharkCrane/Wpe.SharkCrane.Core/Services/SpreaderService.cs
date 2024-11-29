@@ -25,8 +25,8 @@ namespace Wpe.SharkCrane.Core.Services
             
         public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
-            var topic = "/hub/spreader";
-            Console.WriteLine($"SpreaderService received message on topic {topic}: {e.Payload}");
+            var topic = "/spreader";
+            Console.WriteLine($"SpreaderService received message on topic /hub/spreader : {e.Payload}");
 
             
             var spreader = JsonSerializer.Deserialize<Spreader>(e.Payload);
@@ -36,6 +36,7 @@ namespace Wpe.SharkCrane.Core.Services
             var mainsString = JsonSerializer.Serialize(mainSpreader);
 
             await _hiveMQService.PublishAsync(topic, mainsString);
+            
         }
 
         private void ChangeMainProperties(Spreader messageSpreader)

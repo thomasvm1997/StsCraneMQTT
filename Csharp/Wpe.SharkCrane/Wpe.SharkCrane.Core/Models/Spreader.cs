@@ -8,20 +8,22 @@ namespace Wpe.SharkCrane.Core.Models
 {
     public class Spreader
     {
-        private decimal width;
-        public decimal Width 
+        private double width;
+        public double Width 
         {
             get {  return width; }
             set
             {
-                if(value >= 12.5m)
+                if(value >= 12.5d)
                 {
-                    width = 12.5m;
+                    width = 12.5d;
                 }
+                else {
                 width = value;
+                }
             } 
         }
-        public bool IsLocked { get; set; }
+        public bool IsLocked { get; set; } = false;
 
     }
 }
