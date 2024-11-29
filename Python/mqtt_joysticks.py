@@ -15,9 +15,10 @@ TOPIC_MAPPING = {
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
     print("CONNACK received with code %s." % rc)
-    # Subscribe to /hub/joystick/hoist
-    client.subscribe("/hub/joystick/hoist", qos=1)
-    print("Subscribed to /hub/joystick/hoist")
+    # Subscribe to mapped topics
+    for topic in TOPIC_MAPPING.values():
+        client.subscribe(topic, qos=1)
+        print(f"Subscribed to {topic}")
 
 # Callback for publish success
 def on_publish(client, userdata, mid, properties=None):
@@ -37,33 +38,23 @@ def check_joysticks(client):
 
     while True:
         if keyboard.is_pressed('1'):  # Hoist joystick
-            message = "joystick hoist active"
-            client.publish("/joystick/hoist", payload=message, qos=1)
-            print(f"Sent message to /joystick/hoist: {message}")
+            client.publish("/joystick/hoist", payload="joystick hoist active", qos=1)
             time.sleep(1)  # Send the message every 1 second while the key is pressed
 
         elif keyboard.is_pressed('2'):  # Trolley joystick
-            message = "joystick trolley active"
-            client.publish("/joystick/trolley", payload=message, qos=1)
-            print(f"Sent message to /joystick/trolley: {message}")
+            client.publish("/joystick/trolley", payload="joystick trolley active", qos=1)
             time.sleep(1)
 
         elif keyboard.is_pressed('3'):  # Gantry joystick
-            message = "joystick gantry active"
-            client.publish("/joystick/gantry", payload=message, qos=1)
-            print(f"Sent message to /joystick/gantry: {message}")
+            client.publish("/joystick/gantry", payload="joystick gantry active", qos=1)
             time.sleep(1)
 
         elif keyboard.is_pressed('4'):  # Handbrake
-            message = "handbrake active"
-            client.publish("/joystick/handbrake", payload=message, qos=1)
-            print(f"Sent message to /joystick/handbrake: {message}")
+            client.publish("/joystick/handbrake", payload="handbrake active", qos=1)
             time.sleep(1)
 
         elif keyboard.is_pressed('5'):  # Emergency stop
-            message = "emergency stop activated"
-            client.publish("/joystick/emergency-stop", payload=message, qos=1)
-            print(f"Sent message to /joystick/emergency-stop: {message}")
+            client.publish("/joystick/emergency-stop", payload="emergency stop activated", qos=1)
             time.sleep(1)
 
         else:

@@ -14,27 +14,33 @@ TOPIC_MAPPING = {
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
     print("CONNACK received with code %s." % rc)
-    # Subscribe only to the mapped topics
+    # Subscribe to all topics in TOPIC_MAPPING
     for topic in TOPIC_MAPPING.keys():
         client.subscribe(topic, qos=1)
         print(f"Subscribed to {topic}")
 
-# with this callback you can see if your publish was successful
+# Callback for publish success
 def on_publish(client, userdata, mid, properties=None):
     print("mid: " + str(mid))
 
-# print which topic was subscribed to
+# Callback for subscription confirmation
 def on_subscribe(client, userdata, mid, granted_qos, properties=None):
     print("Subscribed: " + str(mid) + " " + str(granted_qos))
 
-# print message, useful for checking if it was successful
+# Callback for message receipt
 def on_message(client, userdata, msg):
-    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-    if msg.topic in TOPIC_MAPPING:
-        print(f"Message received from mapped topic: {msg.topic}")
-    else:
-        print(f"Received message from unknown topic: {msg.topic}")
+    print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
 
+    # Check if the topic is in TOPIC_MAPPING
+    if msg.topic in TOPIC_MAPPING:
+        # Forward the message to the corresponding topic
+        target_topic = TOPIC_MAPPING[msg.topic]
+        client.publish(target_topic, payload=msg.payload, qos=1)
+        print(f"Forwarded message from {msg.topic} to {target_topic}")
+    else:
+        print(f"No mapping found for topic {msg.topic}")
+
+# Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
 
 # Set callbacks
