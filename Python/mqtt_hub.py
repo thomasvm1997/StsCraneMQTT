@@ -8,7 +8,8 @@ TOPIC_MAPPING = {
     "/joystick/hoist": "/hub/joystick/hoist",
     "/joystick/trolley": "/hub/joystick/trolley",
     "/joystick/emergency-stop": "/hub/joystick/emergency-stop",
-    "/joystick/handbrake": "/hub/joystick/handbrake"
+    "/joystick/handbrake": "/hub/joystick/handbrake",
+    "/spreader": "/hub/spreader"
 }
 
 # Callback for connection
