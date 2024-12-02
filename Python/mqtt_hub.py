@@ -9,7 +9,8 @@ TOPIC_MAPPING = {
     "/joystick/trolley": "/hub/joystick/trolley",
     "/joystick/emergency-stop": "/hub/joystick/emergency-stop",
     "/joystick/handbrake": "/hub/joystick/handbrake",
-    "/spreader": "/hub/spreader"
+    "/spreader": "/hub/spreader",
+    "/client": "/hub/client"
 }
 
 # Callback for connection
@@ -40,6 +41,8 @@ def on_message(client, userdata, msg):
         print(f"Forwarded message from {msg.topic} to {target_topic}")
     else:
         print(f"No mapping found for topic {msg.topic}")
+    client.publish("/hub/client", payload=msg.payload, qos=1)
+    print(f"Forwarded message from {msg.topic} to /hub/client")
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
