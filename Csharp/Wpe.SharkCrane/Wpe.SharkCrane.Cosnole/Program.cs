@@ -5,8 +5,10 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Wpe.SharkCrane.Core.Models;
-using Wpe.SharkCrane.Core.Services;
-using Wpe.SharkCrane.Core.Services.Interfaces;
+using Wpe.SharkCrane.Core.Services.HiveService;
+using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
+using Wpe.SharkCrane.Core.Services.SpreaderService;
+using Wpe.SharkCrane.Core.Services.SpreaderService.Interfaces;
 
 #region injections
 var serviceProvider = new ServiceCollection()
