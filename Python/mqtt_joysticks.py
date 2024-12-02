@@ -57,6 +57,14 @@ def check_joysticks(client):
             client.publish("/joystick/emergency-stop", payload="emergency stop activated", qos=1)
             time.sleep(1)
 
+        elif keyboard.is_pressed('6'):  # spreader
+            client.publish("/joystick/spreader", payload="spreader activated", qos=1)
+            time.sleep(1)
+        
+        elif keyboard.is_pressed('7'):  # spreader lock
+            client.publish("/joystick/spreader", payload="spreder lock activated", qos=1)
+            time.sleep(1)
+
         else:
             # No key pressed, no action
             time.sleep(0.1)  # Sleep for a small time to avoid high CPU usage
