@@ -21,7 +21,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
 
 # Callback for publish success
 def on_publish(client, userdata, mid, properties=None):
-    print("mid: " + str(mid))
+    print("Message published with mid: " + str(mid))
 
 # Callback for subscription confirmation
 def on_subscribe(client, userdata, mid, granted_qos, properties=None):
@@ -30,15 +30,11 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 # Callback for message receipt
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
-
-    # Check if the topic is in TOPIC_MAPPING
+    # Forward the message to the mapped topic
     if msg.topic in TOPIC_MAPPING:
-        # Forward the message to the corresponding topic
-        target_topic = TOPIC_MAPPING[msg.topic]
-        client.publish(target_topic, payload=msg.payload, qos=1)
-        print(f"Forwarded message from {msg.topic} to {target_topic}")
-    else:
-        print(f"No mapping found for topic {msg.topic}")
+        mapped_topic = TOPIC_MAPPING[msg.topic]
+        client.publish(mapped_topic, msg.payload, qos=1)
+        print(f"Forwarded message to {mapped_topic}")
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
@@ -50,13 +46,23 @@ client.on_subscribe = on_subscribe
 client.on_message = on_message
 
 # Enable TLS for secure connection
-client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+client.tls_set(tls_version=paho.ssl.PROTOCOL_TLS)
 
-# Set username and password
+# Set username and password for MQTT
 client.username_pw_set("shark", "FishFish1")
 
 # Connect to HiveMQ broker
 client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 
-# Run the client loop
-client.loop_forever()
+# Start the MQTT loop in the background
+client.loop_start()
+
+# Keep the script running
+try:
+    while True:
+        time.sleep(1)
+except KeyboardInterrupt:
+    print("Exiting...")
+finally:
+    client.loop_stop()
+    client.disconnect()

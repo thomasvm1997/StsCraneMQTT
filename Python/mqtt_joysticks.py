@@ -34,32 +34,62 @@ def on_message(client, userdata, msg):
 
 # Main method to check joystick key presses and send messages
 def check_joysticks(client):
-    print("Waiting for joystick button presses...")  # Message printed once at the start
+    print("Controlling joysticks. Press 'q' to quit.")
+    try:
+        while True:
+            if keyboard.is_pressed('q'):
+                print("Exiting joystick control...")
+                break
 
-    while True:
-        if keyboard.is_pressed('1'):  # Hoist joystick
-            client.publish("/joystick/hoist", payload="joystick hoist active", qos=1)
-            time.sleep(1)  # Send the message every 1 second while the key is pressed
+            # Gantry joystick
+            if keyboard.is_pressed('w'):  # Move gantry forward
+                client.publish("/joystick/gantry", payload="joystick gantry forward", qos=1)
+                print("Gantry joystick forward")
+                time.sleep(0.3)
+            elif keyboard.is_pressed('e'):  # Move gantry backward
+                client.publish("/joystick/gantry", payload="joystick gantry backward", qos=1)
+                print("Gantry joystick backward")
+                time.sleep(0.3)
 
-        elif keyboard.is_pressed('2'):  # Trolley joystick
-            client.publish("/joystick/trolley", payload="joystick trolley active", qos=1)
-            time.sleep(1)
+            # Trolley joystick
+            if keyboard.is_pressed('s'):  # Move trolley left
+                client.publish("/joystick/trolley", payload="joystick trolley left", qos=1)
+                print("Trolley joystick left")
+                time.sleep(0.3)
+            elif keyboard.is_pressed('d'):  # Move trolley right
+                client.publish("/joystick/trolley", payload="joystick trolley right", qos=1)
+                print("Trolley joystick right")
+                time.sleep(0.3)
 
-        elif keyboard.is_pressed('3'):  # Gantry joystick
-            client.publish("/joystick/gantry", payload="joystick gantry active", qos=1)
-            time.sleep(1)
+            # Hoist joystick
+            if keyboard.is_pressed('x'):  # Move hoist up
+                client.publish("/joystick/hoist", payload="joystick hoist up", qos=1)
+                print("Hoist joystick up")
+                time.sleep(0.3)
+            elif keyboard.is_pressed('c'):  # Move hoist down
+                client.publish("/joystick/hoist", payload="joystick hoist down", qos=1)
+                print("Hoist joystick down")
+                time.sleep(0.3)
 
-        elif keyboard.is_pressed('4'):  # Handbrake
-            client.publish("/joystick/handbrake", payload="handbrake active", qos=1)
-            time.sleep(1)
+            # Handbrake
+            if keyboard.is_pressed('4'):
+                client.publish("/joystick/handbrake", payload="handbrake active", qos=1)
+                print("Handbrake active")
+                time.sleep(0.3)
 
-        elif keyboard.is_pressed('5'):  # Emergency stop
-            client.publish("/joystick/emergency-stop", payload="emergency stop activated", qos=1)
-            time.sleep(1)
+            # Emergency stop
+            if keyboard.is_pressed('5'):
+                client.publish("/joystick/emergency-stop", payload="emergency stop activated", qos=1)
+                print("Emergency stop activated")
+                time.sleep(0.3)
 
-        else:
-            # No key pressed, no action
             time.sleep(0.1)  # Sleep for a small time to avoid high CPU usage
+    except KeyboardInterrupt:
+        print("Exiting...")
+
+    finally:
+        client.loop_stop()
+        client.disconnect()
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
