@@ -8,7 +8,9 @@ TOPIC_MAPPING = {
     "/joystick/hoist": "/hub/joystick/hoist",
     "/joystick/trolley": "/hub/joystick/trolley",
     "/joystick/emergency-stop": "/hub/joystick/emergency-stop",
-    "/joystick/handbrake": "/hub/joystick/handbrake"
+    "/joystick/handbrake": "/hub/joystick/handbrake",
+    "/spreader": "/hub/spreader",
+    "/client": "/hub/client"
 }
 
 # Callback for connection
@@ -19,7 +21,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
         client.subscribe(topic, qos=1)
         print(f"Subscribed to {topic}")
 
-# Callback for publish success
+# Callback for successful publish
 def on_publish(client, userdata, mid, properties=None):
     print("Message published with mid: " + str(mid))
 
@@ -27,14 +29,18 @@ def on_publish(client, userdata, mid, properties=None):
 def on_subscribe(client, userdata, mid, granted_qos, properties=None):
     print("Subscribed: " + str(mid) + " " + str(granted_qos))
 
-# Callback for message receipt
+# Callback for receiving messages
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
     # Forward the message to the mapped topic
     if msg.topic in TOPIC_MAPPING:
-        mapped_topic = TOPIC_MAPPING[msg.topic]
-        client.publish(mapped_topic, msg.payload, qos=1)
-        print(f"Forwarded message to {mapped_topic}")
+        target_topic = TOPIC_MAPPING[msg.topic]
+        client.publish(target_topic, payload=msg.payload, qos=1)
+        print(f"Forwarded message from {msg.topic} to {target_topic}")
+
+    # Forward every message to /hub/client
+    client.publish("/hub/client", payload=msg.payload, qos=1)
+    print(f"Forwarded message from {msg.topic} to /hub/client")
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
