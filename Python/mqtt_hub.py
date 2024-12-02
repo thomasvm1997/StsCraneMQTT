@@ -21,7 +21,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
         client.subscribe(topic, qos=1)
         print(f"Subscribed to {topic}")
 
-# Callback for publish success
+# Callback for successful publish
 def on_publish(client, userdata, mid, properties=None):
     print("mid: " + str(mid))
 
@@ -29,18 +29,17 @@ def on_publish(client, userdata, mid, properties=None):
 def on_subscribe(client, userdata, mid, granted_qos, properties=None):
     print("Subscribed: " + str(mid) + " " + str(granted_qos))
 
-# Callback for message receipt
+# Callback for receiving messages
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
 
-    # Check if the topic is in TOPIC_MAPPING
+    # Forward to mapped topic, if applicable
     if msg.topic in TOPIC_MAPPING:
-        # Forward the message to the corresponding topic
         target_topic = TOPIC_MAPPING[msg.topic]
         client.publish(target_topic, payload=msg.payload, qos=1)
         print(f"Forwarded message from {msg.topic} to {target_topic}")
-    else:
-        print(f"No mapping found for topic {msg.topic}")
+
+    # Forward every message to /hub/client
     client.publish("/hub/client", payload=msg.payload, qos=1)
     print(f"Forwarded message from {msg.topic} to /hub/client")
 
