@@ -85,11 +85,13 @@ def check_joysticks(client):
 
             elif keyboard.is_pressed('6'):  # spreader
                 client.publish("/joystick/spreader", payload="spreader activated", qos=1)
-                time.sleep(1)
+                print("Spreader activated")
+                time.sleep(0.3)
             
             elif keyboard.is_pressed('7'):  # spreader lock
                 client.publish("/joystick/spreader", payload="spreder lock activated", qos=1)
-                time.sleep(1)
+                print("Spreader lock activated")
+                time.sleep(0.3)
 
         else:
             # No key pressed, no action
