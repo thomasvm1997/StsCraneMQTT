@@ -10,6 +10,11 @@ TOPIC_MAPPING = {
     "/joystick/emergency-stop": "/hub/joystick/emergency-stop",
     "/joystick/handbrake": "/hub/joystick/handbrake",
     "/spreader": "/hub/spreader",
+    "spreader/lock": "/hub/spreader/lock",
+    "spreader/unlock": "/hub/spreader/unlock",
+    "/gantry": "/hub/gantry",
+    "/trolley": "/hub/trolley",
+    "/hoist": "/hub/hoist",
     "/client": "/hub/client"
 }
 
