@@ -51,6 +51,11 @@ def check_joysticks(client):
                 print("Gantry joystick backward")
                 time.sleep(0.3)
 
+            elif keyboard.is_pressed('5'):  # Emergency stop for gantry
+                client.publish("/joystick/emergency-stop", payload="emergency stop activated", qos=1)
+                print("Emergency stop activated")
+                time.sleep(0.3)
+
             # Trolley joystick
             if keyboard.is_pressed('s'):  # Move trolley left
                 client.publish("/joystick/trolley", payload="joystick trolley left", qos=1)
@@ -75,13 +80,7 @@ def check_joysticks(client):
             if keyboard.is_pressed('4'):
                 client.publish("/joystick/handbrake", payload="handbrake active", qos=1)
                 print("Handbrake active")
-                time.sleep(0.3)
-
-            # Emergency stop
-            if keyboard.is_pressed('5'):
-                client.publish("/joystick/emergency-stop", payload="emergency stop activated", qos=1)
-                print("Emergency stop activated")
-                time.sleep(0.3)
+                time.sleep(0.3)        
 
             elif keyboard.is_pressed('6'):  # spreader
                 client.publish("/joystick/spreader", payload="spreader activated", qos=1)
