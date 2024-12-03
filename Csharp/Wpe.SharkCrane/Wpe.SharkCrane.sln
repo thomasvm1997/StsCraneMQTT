@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.SharkCrane.Core", "Wpe.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.SharkCrane.Test", "Wpe.SharkCrane.Test\Wpe.SharkCrane.Test.csproj", "{E6FA5C99-48C6-4EA4-A4C9-02595F288AAD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wpe.HoistClient.Console", "Wpe.HoistClient.Console\Wpe.HoistClient.Console.csproj", "{C171EC2E-8A15-4DF9-9CA5-FCFB9CAE8874}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.HoistClient.Console", "Wpe.HoistClient.Console\Wpe.HoistClient.Console.csproj", "{C171EC2E-8A15-4DF9-9CA5-FCFB9CAE8874}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Consoles", "Consoles", "{649022E7-34C2-4CBA-A33C-2E70584CCC47}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +38,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AB53F74B-EA4F-4BFB-A3B4-A453C3C435A1} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
+		{C171EC2E-8A15-4DF9-9CA5-FCFB9CAE8874} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EE7D1DA8-F0DC-4C2B-8420-4EACADC3A3AC}

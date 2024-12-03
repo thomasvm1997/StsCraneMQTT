@@ -26,7 +26,7 @@ Console.WriteLine("Hello, World!");
 await hiveClient.SubscribeAsync("/hub/spreader");
 
 
-var spreader = new Spreader { IsLocked = true, Width = 1d };
+var spreader = new Spreader { IsLocked = true, Increment = 1d };
 var spreaderString = JsonSerializer.Serialize(spreader); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
 while(true)
 {

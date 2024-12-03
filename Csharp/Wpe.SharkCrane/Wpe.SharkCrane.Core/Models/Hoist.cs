@@ -16,7 +16,7 @@ namespace Wpe.SharkCrane.Core.Models
 
             set
             {
-                if (value < 0)
+                if (value <= 0)
                 {
                     length = 0;
                 }
@@ -26,5 +26,6 @@ namespace Wpe.SharkCrane.Core.Models
                 }
             }
         }
+        public double Increment { get; set; }
     }
 }

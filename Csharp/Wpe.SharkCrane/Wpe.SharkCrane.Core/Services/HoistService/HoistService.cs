@@ -19,7 +19,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            mainHoist = new Hoist();
+            mainHoist = new Hoist { Length = 4d};
         }
 
         public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
@@ -42,7 +42,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
         {
             if (message != null)
             {
-                mainHoist.Length += message.Length;
+                mainHoist.Length += message.Increment;
             }
             else
             {

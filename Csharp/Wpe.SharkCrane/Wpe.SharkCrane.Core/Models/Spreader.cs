@@ -23,6 +23,7 @@ namespace Wpe.SharkCrane.Core.Models
                 }
             } 
         }
+        public double Increment { get; set; }
         public bool IsLocked { get; set; } = false;
 
     }

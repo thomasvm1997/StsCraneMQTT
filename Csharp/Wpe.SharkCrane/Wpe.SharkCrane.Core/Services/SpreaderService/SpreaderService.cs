@@ -45,7 +45,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
             if (mainSpreader != null)
             {
                 mainSpreader.IsLocked = messageSpreader.IsLocked;
-                mainSpreader.Width += messageSpreader.Width;
+                mainSpreader.Width += messageSpreader.Increment;
             }
             else
             {
