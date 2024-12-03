@@ -6,6 +6,8 @@ from paho import mqtt
 # setting callbacks for different events to see if it works, print the message etc.
 def on_connect(client, userdata, flags, rc, properties=None):
     print("CONNACK received with code %s." % rc)
+    client.subscribe("/hub/trolley", qos=1)
+    print("Subscribed to hub/trolley")
 
 # with this callback you can see if your publish was successful
 def on_publish(client, userdata, mid, properties=None):
@@ -37,12 +39,9 @@ client.on_subscribe = on_subscribe
 client.on_message = on_message
 client.on_publish = on_publish
 
-# subscribe to all topics of encyclopedia by using the wildcard "#"
-client.subscribe("encyclopedia/#", qos=1)
-
 
 # a single publish, this can also be done in loops, etc.
-client.publish("encyclopedia/temperature", payload= "hot", qos=1)
+client.publish("/trolley", payload= "hot", qos=1)
 
 # loop_forever for simplicity, here you need to stop the loop manually
 # you can also use loop_start and loop_stop
