@@ -14,28 +14,40 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
     public class HoistService : IHoistService
     {
         private readonly IHiveMQService _hiveMQService;
-        private Spreader mainSpreader;
+        private Hoist mainHoist;
         public HoistService(IHiveMQService hiveMQService)
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            mainSpreader = new Spreader();
+            mainHoist = new Hoist();
         }
 
         public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
-            var topic = "/spreader";
-            Console.WriteLine($"SpreaderService received message on topic /hub/spreader : {e.Payload}");
+            var topic = "/hoist";
+            Console.WriteLine($"HoistService received message on topic /hub/hoist : {e.Payload}");
 
 
-            var spreader = JsonSerializer.Deserialize<Spreader>(e.Payload);
+            var hoistMessage = JsonSerializer.Deserialize<Hoist>(e.Payload);
 
-            ChangeMainProperties(spreader);
+            ChangeMainProperties(hoistMessage);
 
-            var mainsString = JsonSerializer.Serialize(mainSpreader);
+            var mainsString = JsonSerializer.Serialize(mainHoist);
 
             await _hiveMQService.PublishAsync(topic, mainsString);
 
+        }
+
+        private void ChangeMainProperties(Hoist message)
+        {
+            if (message != null)
+            {
+                mainHoist.Length += message.Length;
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(mainHoist));
+            }
         }
     }
 }
