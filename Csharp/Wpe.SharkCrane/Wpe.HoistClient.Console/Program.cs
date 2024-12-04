@@ -4,6 +4,7 @@ using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Services.HiveService;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
 using Wpe.SharkCrane.Core.Services.HoistService;
+using Wpe.SharkCrane.Core.Services.HoistService.HoistRoute;
 using Wpe.SharkCrane.Core.Services.HoistService.Interfaces;
 
 
@@ -20,17 +21,19 @@ await hiveClient.ConnectAsync();
 
 Console.WriteLine("Hello, World!");
 
-await hiveClient.SubscribeAsync("/hub/hoist");
+await hiveClient.SubscribeServiceAsync(HoistRoutes.BaseSubscribeWildcard);
 
 
-var hoist = new Hoist { Increment = -1d };
+var hoist = new Hoist { Increment = 1d };
 var hoistString = JsonSerializer.Serialize(hoist); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
 while (true)
 {
     Console.WriteLine("listening");
 
-    await hiveClient.PublishAsync("/hub/hoist", hoistString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
-                                                                    //We doen alsof we een message krijgen.
+                                                                        
+    await hiveClient.PublishServiceAsync("/hub/hoist/up", hoistString);                                                                    
+
+    //We doen alsof we een message krijgen.
     await Task.Delay(1000);
 
 }

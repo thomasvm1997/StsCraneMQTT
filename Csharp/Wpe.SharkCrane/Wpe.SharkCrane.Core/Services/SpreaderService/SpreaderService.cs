@@ -37,7 +37,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
 
                 var mainsString = JsonSerializer.Serialize(mainSpreader);
 
-                await _hiveMQService.PublishAsync(topic, mainsString);
+                await _hiveMQService.PublishServiceAsync(topic, mainsString);
 
             }
             catch (Exception ex) 
