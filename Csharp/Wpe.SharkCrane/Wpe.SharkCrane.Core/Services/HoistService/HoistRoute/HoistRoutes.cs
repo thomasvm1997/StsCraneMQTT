@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Wpe.SharkCrane.Core.Services.HoistService.HoistRoutes
+namespace Wpe.SharkCrane.Core.Services.HoistService.HoistRoute
 {
     public static class HoistRoutes
     {
         #region Subscribe
         public const string BaseSubscribe = "/hub/hoist";
+        public const string BaseSubscribeWildcard = "/hub/spreader/#";
         public const string SubscribeUp = BaseSubscribe + "/up";
         public const string SubscribeDown = BaseSubscribe + "/down";
 

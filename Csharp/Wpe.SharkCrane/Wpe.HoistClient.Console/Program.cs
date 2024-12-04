@@ -4,6 +4,7 @@ using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Services.HiveService;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
 using Wpe.SharkCrane.Core.Services.HoistService;
+using Wpe.SharkCrane.Core.Services.HoistService.HoistRoute;
 using Wpe.SharkCrane.Core.Services.HoistService.Interfaces;
 
 
@@ -20,10 +21,10 @@ await hiveClient.ConnectAsync();
 
 Console.WriteLine("Hello, World!");
 
-await hiveClient.SubscribeAsync("/hub/hoist");
+await hiveClient.SubscribeAsync(HoistRoutes.BaseSubscribeWildcard);
 
 
-var hoist = new Hoist { Increment = -1d };
+var hoist = new Hoist { Increment = 1d };
 var hoistString = JsonSerializer.Serialize(hoist); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
 while (true)
 {

@@ -8,6 +8,8 @@ using Wpe.SharkCrane.Core.Models.CustomEventArgs;
 using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
 using Wpe.SharkCrane.Core.Services.HoistService.Interfaces;
+using Wpe.SharkCrane.Core.Services.HoistService.HoistRoutes;
+using Wpe.SharkCrane.Core.Services.HoistService.HoistRoute;
 
 namespace Wpe.SharkCrane.Core.Services.HoistService
 {
@@ -24,17 +26,17 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
 
         public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
-            string publishTopic;
+            
             Console.WriteLine($"HoistService received message on topic {e.Topic} : {e.Payload}");
 
+            var hoistMessage = JsonSerializer.Deserialize<Hoist>(e.Payload);
 
+            ChangeMainProperties(hoistMessage, e.Topic);
+
+            var mainsString = JsonSerializer.Serialize(mainHoist);
             try
             {
-                var hoistMessage = JsonSerializer.Deserialize<Hoist>(e.Payload);
-
-                ChangeMainProperties(hoistMessage);
-
-                var mainsString = JsonSerializer.Serialize(mainHoist);
+                
 
                 await _hiveMQService.PublishAsync("/hoist", mainsString);
             }
@@ -48,15 +50,21 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
 
         }
 
-        private void ChangeMainProperties(Hoist message)
+        private void ChangeMainProperties(Hoist hoistMessage, string topic)
         {
-            if (message != null)
+            switch (topic)
             {
-                mainHoist.Length += message.Increment;
-            }
-            else
-            {
-                throw new ArgumentNullException(nameof(mainHoist));
+
+                case HoistRoutes.SubscribeUp:
+                    mainHoist.Length -= hoistMessage.Increment;
+                    break;
+
+                case HoistRoutes.SubscribeDown:
+                    mainHoist.Length += hoistMessage.Increment;
+                    break;
+
+                default:
+                    throw new ArgumentException(topic + "not recognized");
             }
         }
     }
