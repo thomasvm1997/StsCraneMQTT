@@ -29,42 +29,51 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
             
             Console.WriteLine($"HoistService received message on topic {e.Topic} : {e.Payload}");
 
-            var hoistMessage = JsonSerializer.Deserialize<Hoist>(e.Payload);
+            Hoist hoistMessage = JsonSerializer.Deserialize<Hoist>(e.Payload);
 
-            ChangeMainProperties(hoistMessage, e.Topic);
+            BaseResultModel result = ChangeMainProperties(hoistMessage, e.Topic);
 
-            var mainsString = JsonSerializer.Serialize(mainHoist);
-            try
+            string mainsString = JsonSerializer.Serialize(mainHoist);
+           
+
+            if(result.IsSuccess = true)
             {
-                
-
-                await _hiveMQService.PublishAsync("/hoist", mainsString);
+                await _hiveMQService.PublishAsync(e.Topic, mainsString);
             }
-
-            catch (Exception ex) 
-            { 
-                Console.WriteLine(ex.Message);
-            }
-
-            
+            else
+            {
+                Console.WriteLine(result.Errors.First());
+            }     
 
         }
 
-        private void ChangeMainProperties(Hoist hoistMessage, string topic)
+        private BaseResultModel ChangeMainProperties(Hoist hoistMessage, string topic)
         {
-            switch (topic)
+            if (hoistMessage != null) 
             {
 
-                case HoistRoutes.SubscribeUp:
-                    mainHoist.Length -= hoistMessage.Increment;
-                    break;
+                switch (topic)
+                {
 
-                case HoistRoutes.SubscribeDown:
-                    mainHoist.Length += hoistMessage.Increment;
-                    break;
+                    case HoistRoutes.SubscribeUp:
+                        mainHoist.Length -= hoistMessage.Increment;
+                        return new BaseResultModel { IsSuccess = true };
 
-                default:
-                    throw new ArgumentException(topic + "not recognized");
+
+                    case HoistRoutes.SubscribeDown:
+                        mainHoist.Length += hoistMessage.Increment;
+                        return new BaseResultModel { IsSuccess = true };
+
+
+                    default:
+                        var list = new List<string> { $"{topic} is not recognized" };
+                        return new BaseResultModel { IsSuccess = false, Errors = list };
+                }
+            }
+            else
+            {
+                var list = new List<string> { "Could not serialize received object" };
+                return new BaseResultModel { IsSuccess = false, Errors = list };
             }
         }
     }
