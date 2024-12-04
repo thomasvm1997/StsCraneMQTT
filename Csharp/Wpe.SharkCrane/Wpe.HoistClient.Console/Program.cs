@@ -21,7 +21,7 @@ await hiveClient.ConnectAsync();
 
 Console.WriteLine("Hello, World!");
 
-await hiveClient.SubscribeAsync(HoistRoutes.BaseSubscribeWildcard);
+await hiveClient.SubscribeServiceAsync(HoistRoutes.BaseSubscribeWildcard);
 
 
 var hoist = new Hoist { Increment = 1d };
@@ -30,8 +30,10 @@ while (true)
 {
     Console.WriteLine("listening");
 
-    await hiveClient.PublishAsync("/hub/hoist", hoistString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
-                                                                    //We doen alsof we een message krijgen.
+                                                                        
+    await hiveClient.PublishServiceAsync("/hub/hoist/left", hoistString);                                                                    
+
+    //We doen alsof we een message krijgen.
     await Task.Delay(1000);
 
 }

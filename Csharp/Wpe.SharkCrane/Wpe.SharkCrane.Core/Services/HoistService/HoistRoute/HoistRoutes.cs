@@ -10,7 +10,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService.HoistRoute
     {
         #region Subscribe
         public const string BaseSubscribe = "/hub/hoist";
-        public const string BaseSubscribeWildcard = "/hub/spreader/#";
+        public const string BaseSubscribeWildcard = "/hub/hoist/#";
         public const string SubscribeUp = BaseSubscribe + "/up";
         public const string SubscribeDown = BaseSubscribe + "/down";
 

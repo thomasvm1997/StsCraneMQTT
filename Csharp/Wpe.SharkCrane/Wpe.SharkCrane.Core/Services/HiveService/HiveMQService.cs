@@ -49,15 +49,17 @@ namespace Wpe.SharkCrane.Core.Services.HiveService
             };
         }
 
-        public async Task PublishAsync(string topic, string payload)
+        public async Task PublishServiceAsync(string topic, string payload)
         {
             await _client.PublishAsync(topic, payload);
-            Console.WriteLine($"Message published to topic {topic}: {payload}");
+            if (!topic.Contains("hub")) {
+            Console.WriteLine($"Message published to topic {topic}: {payload}"); //Deze check is om onnodige CW te verkomen bij mock publish
+            }
         }
 
-        public async Task SubscribeAsync(string topic)
+        public async Task SubscribeServiceAsync(string topic)
         {
-            var r = await _client.SubscribeAsync(topic);
+            await _client.SubscribeAsync(topic);
             Console.WriteLine($"Subscribed to topic: {topic}");
 
         }

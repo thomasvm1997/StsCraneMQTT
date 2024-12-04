@@ -23,7 +23,7 @@ await hiveClient.ConnectAsync();
 
 Console.WriteLine("Hello, World!");
 
-await hiveClient.SubscribeAsync("/hub/spreader");
+await hiveClient.SubscribeServiceAsync("/hub/spreader");
 
 
 var spreader = new Spreader { IsLocked = true, Increment = 1d };
@@ -32,7 +32,7 @@ while(true)
 {
     Console.WriteLine("listening");
     
-    await hiveClient.PublishAsync("/hub/spreader", spreaderString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+    await hiveClient.PublishServiceAsync("/hub/spreader/down", spreaderString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
                                                                     //We doen alsof we een message krijgen.
     await Task.Delay(1000);
 
