@@ -6,9 +6,19 @@ from paho import mqtt
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print("Client connected successfully to broker.")
-
-        client.subscribe("/hub/client", qos=1)
-        print("Subscribed to /hub/client.")
+        
+        # Subscribe to required topics
+        client.subscribe("/hub/gantry/handbrake/lock", qos=1)
+        client.subscribe("/hub/gantry/handbrake/release", qos=1)
+        client.subscribe("/hub/gantry/location", qos=1)
+        client.subscribe("/hub/hoist/location", qos=1)
+        client.subscribe("/hub/trolley/location", qos=1)
+        client.subscribe("/hub/spreader/status/open", qos=1)
+        client.subscribe("/hub/spreader/status/closed", qos=1)
+        client.subscribe("/hub/spreader/status/locked", qos=1)
+        client.subscribe("/hub/spreader/status/unlocked", qos=1)
+        
+        print("Client subscribed to all topics.")
     else:
         print(f"Failed to connect, return code {rc}")
 
