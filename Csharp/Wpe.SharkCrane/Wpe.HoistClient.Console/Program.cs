@@ -31,7 +31,7 @@ while (true)
     Console.WriteLine("listening");
 
                                                                         
-    await hiveClient.PublishServiceAsync("/hub/hoist/left", hoistString);                                                                    
+    await hiveClient.PublishServiceAsync("/hub/hoist/up", hoistString);                                                                    
 
     //We doen alsof we een message krijgen.
     await Task.Delay(1000);
