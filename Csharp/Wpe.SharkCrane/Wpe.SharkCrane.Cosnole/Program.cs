@@ -9,6 +9,7 @@ using Wpe.SharkCrane.Core.Services.HiveService;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
 using Wpe.SharkCrane.Core.Services.SpreaderService;
 using Wpe.SharkCrane.Core.Services.SpreaderService.Interfaces;
+using Wpe.SharkCrane.Core.Services.SpreaderService.SpreaderRoute;
 
 #region injections
 var serviceProvider = new ServiceCollection()
@@ -23,7 +24,7 @@ await hiveClient.ConnectAsync();
 
 Console.WriteLine("Hello, World!");
 
-await hiveClient.SubscribeServiceAsync("/hub/spreader");
+await hiveClient.SubscribeServiceAsync(SpreaderRoutes.BaseSubscribeWildcard);
 
 
 var spreader = new Spreader { IsLocked = true, Increment = 1d };
@@ -32,7 +33,7 @@ while(true)
 {
     Console.WriteLine("listening");
     
-    await hiveClient.PublishServiceAsync("/hub/spreader/down", spreaderString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+    await hiveClient.PublishServiceAsync("/hub/spreader/widen", spreaderString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
                                                                     //We doen alsof we een message krijgen.
     await Task.Delay(1000);
 

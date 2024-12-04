@@ -9,14 +9,17 @@ using System.Threading.Tasks;
 using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Models.CustomEventArgs;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
+using Wpe.SharkCrane.Core.Services.HoistService.HoistRoute;
 using Wpe.SharkCrane.Core.Services.SpreaderService.Interfaces;
+using Wpe.SharkCrane.Core.Services.SpreaderService.SpreaderRoute;
 
 namespace Wpe.SharkCrane.Core.Services.SpreaderService
 {
     public class SpreaderService : ISpreaderService
     {
         private readonly IHiveMQService _hiveMQService;
-        private Spreader mainSpreader;
+        private readonly Spreader mainSpreader;
+        private string publishTopic;
         public SpreaderService(IHiveMQService hiveMQService)
         {
             _hiveMQService = hiveMQService;
@@ -26,38 +29,64 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
 
         public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
-            var topic = "/spreader";
-            Console.WriteLine($"SpreaderService received message on topic /hub/spreader : {e.Payload}");
+            Console.WriteLine($"HoistService received message on topic {e.Topic} : {e.Payload}");
 
-            try
+            Spreader spreaderMessage = JsonSerializer.Deserialize<Spreader>(e.Payload);
+
+            BaseResultModel result = ChangeMainProperties(spreaderMessage, e.Topic);
+
+            string mainsString = JsonSerializer.Serialize(mainSpreader);
+
+
+            if (result.IsSuccess == true)
             {
-                var spreader = JsonSerializer.Deserialize<Spreader>(e.Payload);
-
-                ChangeMainProperties(spreader);
-
-                var mainsString = JsonSerializer.Serialize(mainSpreader);
-
-                await _hiveMQService.PublishServiceAsync(topic, mainsString);
-
+                await _hiveMQService.PublishServiceAsync(publishTopic, mainsString);
             }
-            catch (Exception ex) 
+            else
             {
-                Console.WriteLine(ex.Message);
-
+                Console.WriteLine(result.Errors.First());
             }
 
         }
 
-        private void ChangeMainProperties(Spreader messageSpreader)
+        private BaseResultModel ChangeMainProperties(Spreader spreaderMessage, string topic)
         {
-            if (mainSpreader != null)
+            if (spreaderMessage != null)
             {
-                mainSpreader.IsLocked = messageSpreader.IsLocked;
-                mainSpreader.Width += messageSpreader.Increment;
+
+                switch (topic)
+                {
+
+                    case SpreaderRoutes.SubscribeWiden:
+                        mainSpreader.Width += spreaderMessage.Increment;
+                        publishTopic = SpreaderRoutes.PublishWiden;
+                        return new BaseResultModel { IsSuccess = true };
+
+
+                    case SpreaderRoutes.SubscribeNarrow:
+                        mainSpreader.Width -= spreaderMessage.Increment;
+                        publishTopic = SpreaderRoutes.PublishNarrow;
+                        return new BaseResultModel { IsSuccess = true };
+                    
+                    case SpreaderRoutes.SubscribeLock:
+                        mainSpreader.IsLocked = spreaderMessage.IsLocked;
+                        publishTopic = SpreaderRoutes.PublishLock;
+                        return new BaseResultModel { IsSuccess = true };
+
+                    case SpreaderRoutes.SubscribeUnlock:
+                        mainSpreader.IsLocked = spreaderMessage.IsLocked;
+                        publishTopic = SpreaderRoutes.PublishUnlock;
+                        return new BaseResultModel { IsSuccess = true };
+
+                    default:
+                        var list = new List<string> { $"{topic} is not recognized" };
+                        return new BaseResultModel { IsSuccess = false, Errors = list };
+                }
             }
             else
             {
-                throw new ArgumentNullException(nameof(mainSpreader));
+                var list = new List<string> { "Could not serialize received Spreader Object" };
+                return new BaseResultModel { IsSuccess = false, Errors = list };
             }
         }
 

@@ -74,7 +74,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
             }
             else
             {
-                var list = new List<string> { "Could not serialize received object" };
+                var list = new List<string> { "Could not serialize received Hoist object" };
                 return new BaseResultModel { IsSuccess = false, Errors = list };
             }
         }
