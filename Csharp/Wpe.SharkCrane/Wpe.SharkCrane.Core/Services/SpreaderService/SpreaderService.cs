@@ -29,14 +29,22 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
             var topic = "/spreader";
             Console.WriteLine($"SpreaderService received message on topic /hub/spreader : {e.Payload}");
 
+            try
+            {
+                var spreader = JsonSerializer.Deserialize<Spreader>(e.Payload);
 
-            var spreader = JsonSerializer.Deserialize<Spreader>(e.Payload);
+                ChangeMainProperties(spreader);
 
-            ChangeMainProperties(spreader);
+                var mainsString = JsonSerializer.Serialize(mainSpreader);
 
-            var mainsString = JsonSerializer.Serialize(mainSpreader);
+                await _hiveMQService.PublishServiceAsync(topic, mainsString);
 
-            await _hiveMQService.PublishAsync(topic, mainsString);
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+
+            }
 
         }
 
@@ -45,7 +53,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
             if (mainSpreader != null)
             {
                 mainSpreader.IsLocked = messageSpreader.IsLocked;
-                mainSpreader.Width += messageSpreader.Width;
+                mainSpreader.Width += messageSpreader.Increment;
             }
             else
             {

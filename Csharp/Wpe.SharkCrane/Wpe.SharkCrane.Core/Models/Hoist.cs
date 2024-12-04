@@ -6,25 +6,26 @@ using System.Threading.Tasks;
 
 namespace Wpe.SharkCrane.Core.Models
 {
-    public class Spreader
+    public class Hoist
     {
-        private double width;
-        public double Width 
+        private double length;
+        public double Length 
+        
         {
-            get {  return width; }
+            get {return length;}
+
             set
             {
-                if(value >= 12.5d)
+                if (value <= 0)
                 {
-                    width = 12.5d;
+                    length = 0;
                 }
-                else {
-                width = value;
+                else
+                {
+                    length = value;
                 }
-            } 
+            }
         }
         public double Increment { get; set; }
-        public bool IsLocked { get; set; } = false;
-
     }
 }

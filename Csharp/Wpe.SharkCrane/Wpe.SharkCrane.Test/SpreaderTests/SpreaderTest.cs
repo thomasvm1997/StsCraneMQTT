@@ -13,7 +13,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
     public class SpreaderTest
     {
         [Fact]
-        public void SpreaderObject_WithValidParameters_ReturnsSpreaderObjectWithCorrectProperties()
+        public void CreateSpreaderObject_WithValidParameters_ReturnsSpreaderObjectWithCorrectProperties()
         {
             // Arrange
             double width = 5;
@@ -31,7 +31,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
         }
 
         [Fact]
-        public void SpreaderObject_WithWidthHigherThanMax_ReturnsSpreaderObjectWithCorrectProperties()
+        public void CreateSpreaderObject_WithWidthHigherThanMax_ReturnsSpreaderObjectWithCorrectedProperties()
         {
             // Arrange
             double width = 15;
