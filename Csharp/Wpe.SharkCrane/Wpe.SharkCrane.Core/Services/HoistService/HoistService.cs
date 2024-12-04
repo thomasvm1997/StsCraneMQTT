@@ -24,8 +24,8 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
 
         public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
-            var topic = "/hoist";
-            Console.WriteLine($"HoistService received message on topic /hub/hoist : {e.Payload}");
+            string publishTopic;
+            Console.WriteLine($"HoistService received message on topic {e.Topic} : {e.Payload}");
 
 
             try
@@ -36,7 +36,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
 
                 var mainsString = JsonSerializer.Serialize(mainHoist);
 
-                await _hiveMQService.PublishAsync(topic, mainsString);
+                await _hiveMQService.PublishAsync("/hoist", mainsString);
             }
 
             catch (Exception ex) 

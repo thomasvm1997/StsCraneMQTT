@@ -44,7 +44,7 @@ namespace Wpe.SharkCrane.Core.Services.HiveService
                 //Console.WriteLine($"Message received on topic {receivedTopic}: {receivedPayload}");
 
 
-                MessageReceived?.Invoke(this, new CustomMessageReceivedEventArgs(args.PublishMessage.PayloadAsString));
+                MessageReceived?.Invoke(this, new CustomMessageReceivedEventArgs(args.PublishMessage.PayloadAsString, args.PublishMessage.Topic));
 
             };
         }
