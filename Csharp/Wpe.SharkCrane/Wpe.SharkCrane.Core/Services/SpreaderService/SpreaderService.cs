@@ -8,9 +8,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Models.CustomEventArgs;
-using Wpe.SharkCrane.Core.Services.Interfaces;
+using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
+using Wpe.SharkCrane.Core.Services.SpreaderService.Interfaces;
 
-namespace Wpe.SharkCrane.Core.Services
+namespace Wpe.SharkCrane.Core.Services.SpreaderService
 {
     public class SpreaderService : ISpreaderService
     {
@@ -22,13 +23,13 @@ namespace Wpe.SharkCrane.Core.Services
             _hiveMQService.MessageReceived += OnMessageReceived;
             mainSpreader = new Spreader();
         }
-            
+
         public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
             var topic = "/spreader";
             Console.WriteLine($"SpreaderService received message on topic /hub/spreader : {e.Payload}");
 
-            
+
             var spreader = JsonSerializer.Deserialize<Spreader>(e.Payload);
 
             ChangeMainProperties(spreader);
@@ -36,7 +37,7 @@ namespace Wpe.SharkCrane.Core.Services
             var mainsString = JsonSerializer.Serialize(mainSpreader);
 
             await _hiveMQService.PublishAsync(topic, mainsString);
-            
+
         }
 
         private void ChangeMainProperties(Spreader messageSpreader)

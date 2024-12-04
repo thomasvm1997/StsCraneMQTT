@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Models.CustomEventArgs;
 
-namespace Wpe.SharkCrane.Core.Services.Interfaces
+namespace Wpe.SharkCrane.Core.Services.HiveService.Interfaces
 {
     public interface IHiveMQService
     {
@@ -15,6 +15,6 @@ namespace Wpe.SharkCrane.Core.Services.Interfaces
         public Task ConnectAsync();
         public Task SubscribeAsync(string topic);
         public Task PublishAsync(string topic, string payload);
-        
+
     }
 }
