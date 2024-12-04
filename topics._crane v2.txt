@@ -1,0 +1,142 @@
+HUB
+	Subscribe:
+
+		Gantry:
+			/joysticks/gantry/left
+			/joysticks/gantry/right
+			/joysticks/gantry/handbrake/lock
+			/joysticks/gantry/handbrake/release
+			/gantry/location
+		Hoist:
+			/joysticks/hoist/up
+			/joysticks/hoist/down
+			/hoist/location
+		Trolley:
+			/joysticks/trolley/forward
+			/joysticks/trolley/backward
+			/trolley/location
+		
+		Spreader:
+			/joysticks/spreader/open
+			/joysticks/spreader/close
+			/joysticks/spreader/lock
+			/joysticks/spreader/unlock
+			/spreader/status/open
+			/spreader/status/closed
+			/spreader/status/locked
+			/spreader/status/unlocked
+		Emergency button:
+			/joysticks/emergency/lock
+			/joysticks/emergency/unlock
+	Publish:
+
+		Gantry:
+			/hub/gantry/left
+			/hub/gantry/right
+			/hub/gantry/handbrake/lock
+			/hub/gantry/handbrake/release
+			/hub/gantry/location
+		Hoist:
+			/hub/hoist/up
+			/hub/hoist/down
+			/hub/hoist/location
+		Trolley:
+			/hub/trolley/forward
+			/hub/trolley/backward
+			/hub/trolley/location
+		Spreader:
+			/hub/spreader/open
+			/hub/spreader/close
+			/hub/spreader/lock
+			/hub/spreader/unlock
+			/hub/spreader/status/open
+			/hub/spreader/status/closed
+			/hub/spreader/status/locked
+			/hub/spreader/status/unlocked
+		Emergency button:
+			/hub/emergency/lock
+			/hub/emergency/unlock
+
+
+GANTRY
+	Subscribe:
+		/hub/gantry/left
+		/hub/gantry/right
+		/hub/gantry/handbrake/lock
+		/hub/gantry/handbrake/release
+	Publish:
+		/gantry/location
+
+
+HOIST
+	Subscribe:
+		/hub/hoist/up
+		/hub/hoist/down
+	Publish:
+		/hoist/location
+
+
+TROLLEY
+	Subscribe:
+		/hub/trolley/forward
+		/hub/trolley/backward
+	Publish:
+		/trolley/location
+
+
+SPREADER
+	Subscribe:
+		/hub/spreader/open
+		/hub/spreader/close
+		/hub/spreader/lock
+		/hub/spreader/unlock
+	Publish:
+		/spreader/status/open
+		/spreader/status/closed
+		/spreader/status/locked
+		/spreader/status/unlocked
+
+
+CLIENT
+	Subscribe:
+
+		Gantry:
+			/hub/gantry/handbrake/lock
+			/hub/gantry/handbrake/release
+			/hub/gantry/location
+		Hoist:
+			/hub/hoist/location
+		Trolley:
+			/hub/trolley/location
+		Spreader:
+			/hub/spreader/status/open
+			/hub/spreader/status/closed
+			/hub/spreader/status/locked
+			/hub/spreader/status/unlocked
+		Publish:
+			(None, the Client is read-only.)
+
+JOYSTICKS
+	Subscribe:
+		(None, the Joysticks module only sends commands.)
+
+	Publish:
+		Gantry:
+			/joysticks/gantry/left
+			/joysticks/gantry/right
+			/joysticks/gantry/handbrake/lock
+			/joysticks/gantry/handbrake/release
+		Hoist:
+			/joysticks/hoist/up
+			/joysticks/hoist/down
+		Trolley:
+			/joysticks/trolley/forward
+			/joysticks/trolley/backward
+		Spreader:
+			/joysticks/spreader/open
+			/joysticks/spreader/close
+			/joysticks/spreader/lock
+			/joysticks/spreader/unlock
+		Emergency button:
+			/joysticks/emergency/lock
+			/joysticks/emergency/unlock

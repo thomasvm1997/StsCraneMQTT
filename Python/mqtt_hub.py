@@ -2,27 +2,69 @@ import time
 import paho.mqtt.client as paho
 from paho import mqtt
 
-# Mapping subscription topics to their respective mapped names
-TOPIC_MAPPING = {
-    "/joystick/gantry": "/hub/joystick/gantry",
-    "/joystick/hoist": "/hub/joystick/hoist",
-    "/joystick/trolley": "/hub/joystick/trolley",
-    "/joystick/emergency-stop": "/hub/joystick/emergency-stop",
-    "/joystick/handbrake": "/hub/joystick/handbrake",
-    "/spreader": "/hub/spreader",
-    "spreader/lock": "/hub/spreader/lock",
-    "spreader/unlock": "/hub/spreader/unlock",
-    "/gantry": "/hub/gantry",
-    "/trolley": "/hub/trolley",
-    "/hoist": "/hub/hoist",
-    "/client": "/hub/client"
+SUBSCRIPTIONS = [
+    # Gantry
+    "/joysticks/gantry/left",
+    "/joysticks/gantry/right",
+    "/joysticks/gantry/handbrake/lock",
+    "/joysticks/gantry/handbrake/release",
+    "/gantry/location",
+    # Hoist
+    "/joysticks/hoist/up",
+    "/joysticks/hoist/down",
+    "/hoist/location",
+    # Trolley
+    "/joysticks/trolley/forward",
+    "/joysticks/trolley/backward",
+    "/trolley/location",
+    # Spreader
+    "/joysticks/spreader/open",
+    "/joysticks/spreader/close",
+    "/joysticks/spreader/lock",
+    "/joysticks/spreader/unlock",
+    "/spreader/status/open",
+    "/spreader/status/closed",
+    "/spreader/status/locked",
+    "/spreader/status/unlocked",
+    # Emergency
+    "/joysticks/emergency/lock",
+    "/joysticks/emergency/unlock"
+]
+
+PUBLISH_TOPICS = {
+    # Gantry
+    "/joysticks/gantry/left": "/hub/gantry/left",
+    "/joysticks/gantry/right": "/hub/gantry/right",
+    "/joysticks/gantry/handbrake/lock": "/hub/gantry/handbrake/lock",
+    "/joysticks/gantry/handbrake/release": "/hub/gantry/handbrake/release",
+    "/gantry/location": "/hub/gantry/location",
+    # Hoist
+    "/joysticks/hoist/up": "/hub/hoist/up",
+    "/joysticks/hoist/down": "/hub/hoist/down",
+    "/hoist/location": "/hub/hoist/location",
+    # Trolley
+    "/joysticks/trolley/forward": "/hub/trolley/forward",
+    "/joysticks/trolley/backward": "/hub/trolley/backward",
+    "/trolley/location": "/hub/trolley/location",
+    # Spreader
+    "/joysticks/spreader/open": "/hub/spreader/open",
+    "/joysticks/spreader/close": "/hub/spreader/close",
+    "/joysticks/spreader/lock": "/hub/spreader/lock",
+    "/joysticks/spreader/unlock": "/hub/spreader/unlock",
+    "/spreader/status/open": "/hub/spreader/status/open",
+    "/spreader/status/closed": "/hub/spreader/status/closed",
+    "/spreader/status/locked": "/hub/spreader/status/locked",
+    "/spreader/status/unlocked": "/hub/spreader/status/unlocked",
+    # Emergency
+    "/joysticks/emergency/lock": "/hub/emergency/lock",
+    "/joysticks/emergency/unlock": "/hub/emergency/unlock"
 }
 
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
     print("CONNACK received with code %s." % rc)
-    # Subscribe to all topics in TOPIC_MAPPING
-    for topic in TOPIC_MAPPING.keys():
+    # Subscribe to all topics in SUBSCRIPTIONS
+    for topic in SUBSCRIPTIONS:
         client.subscribe(topic, qos=1)
         print(f"Subscribed to {topic}")
 
@@ -37,15 +79,12 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 # Callback for receiving messages
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
-    # Forward the message to the mapped topic
-    if msg.topic in TOPIC_MAPPING:
-        target_topic = TOPIC_MAPPING[msg.topic]
+
+    # Check if the topic should be published elsewhere
+    if msg.topic in PUBLISH_TOPICS:
+        target_topic = PUBLISH_TOPICS[msg.topic]
         client.publish(target_topic, payload=msg.payload, qos=1)
         print(f"Forwarded message from {msg.topic} to {target_topic}")
-
-    # Forward every message to /hub/client
-    client.publish("/hub/client", payload=msg.payload, qos=1)
-    print(f"Forwarded message from {msg.topic} to /hub/client")
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
