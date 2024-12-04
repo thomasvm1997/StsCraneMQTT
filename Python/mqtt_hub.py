@@ -2,6 +2,7 @@ import time
 import paho.mqtt.client as paho
 from paho import mqtt
 
+# List of topics the Hub subscribes to
 SUBSCRIPTIONS = [
     # Gantry
     "/joysticks/gantry/left",
@@ -18,19 +19,20 @@ SUBSCRIPTIONS = [
     "/joysticks/trolley/backward",
     "/trolley/location",
     # Spreader
-    "/joysticks/spreader/open",
-    "/joysticks/spreader/close",
+    "/joysticks/spreader/widen",
+    "/joysticks/spreader/narrow",
     "/joysticks/spreader/lock",
     "/joysticks/spreader/unlock",
-    "/spreader/status/open",
-    "/spreader/status/closed",
-    "/spreader/status/locked",
-    "/spreader/status/unlocked",
-    # Emergency
+    "/spreader/widen",
+    "/spreader/narrow",
+    "/spreader/lock",
+    "/spreader/unlock",
+    # Emergency Button
     "/joysticks/emergency/lock",
     "/joysticks/emergency/unlock"
 ]
 
+# Map incoming topics to their corresponding Hub publication topics
 PUBLISH_TOPICS = {
     # Gantry
     "/joysticks/gantry/left": "/hub/gantry/left",
@@ -47,40 +49,40 @@ PUBLISH_TOPICS = {
     "/joysticks/trolley/backward": "/hub/trolley/backward",
     "/trolley/location": "/hub/trolley/location",
     # Spreader
-    "/joysticks/spreader/open": "/hub/spreader/open",
-    "/joysticks/spreader/close": "/hub/spreader/close",
+    "/joysticks/spreader/widen": "/hub/spreader/widen",
+    "/joysticks/spreader/narrow": "/hub/spreader/narrow",
     "/joysticks/spreader/lock": "/hub/spreader/lock",
     "/joysticks/spreader/unlock": "/hub/spreader/unlock",
-    "/spreader/status/open": "/hub/spreader/status/open",
-    "/spreader/status/closed": "/hub/spreader/status/closed",
-    "/spreader/status/locked": "/hub/spreader/status/locked",
-    "/spreader/status/unlocked": "/hub/spreader/status/unlocked",
-    # Emergency
+    "/spreader/widen": "/hub/spreader/widen",
+    "/spreader/narrow": "/hub/spreader/narrow",
+    "/spreader/lock": "/hub/spreader/lock",
+    "/spreader/unlock": "/hub/spreader/unlock",
+    # Emergency Button
     "/joysticks/emergency/lock": "/hub/emergency/lock",
     "/joysticks/emergency/unlock": "/hub/emergency/unlock"
 }
 
-# Callback for connection
+# Callback for successful connection
 def on_connect(client, userdata, flags, rc, properties=None):
     print("CONNACK received with code %s." % rc)
-    # Subscribe to all topics in SUBSCRIPTIONS
+    # Subscribe to all topics
     for topic in SUBSCRIPTIONS:
         client.subscribe(topic, qos=1)
         print(f"Subscribed to {topic}")
 
 # Callback for successful publish
 def on_publish(client, userdata, mid, properties=None):
-    print("Message published with mid: " + str(mid))
+    print(f"Message published with mid: {mid}")
 
 # Callback for subscription confirmation
 def on_subscribe(client, userdata, mid, granted_qos, properties=None):
-    print("Subscribed: " + str(mid) + " " + str(granted_qos))
+    print(f"Subscribed: mid={mid}, qos={granted_qos}")
 
 # Callback for receiving messages
 def on_message(client, userdata, msg):
-    print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
-
-    # Check if the topic should be published elsewhere
+    print(f"Received message on topic {msg.topic}: {msg.payload.decode('utf-8')}")
+    
+    # Check if the topic has a mapped publication topic
     if msg.topic in PUBLISH_TOPICS:
         target_topic = PUBLISH_TOPICS[msg.topic]
         client.publish(target_topic, payload=msg.payload, qos=1)
