@@ -28,13 +28,23 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
             Console.WriteLine($"HoistService received message on topic /hub/hoist : {e.Payload}");
 
 
-            var hoistMessage = JsonSerializer.Deserialize<Hoist>(e.Payload);
+            try
+            {
+                var hoistMessage = JsonSerializer.Deserialize<Hoist>(e.Payload);
 
-            ChangeMainProperties(hoistMessage);
+                ChangeMainProperties(hoistMessage);
 
-            var mainsString = JsonSerializer.Serialize(mainHoist);
+                var mainsString = JsonSerializer.Serialize(mainHoist);
 
-            await _hiveMQService.PublishAsync(topic, mainsString);
+                await _hiveMQService.PublishAsync(topic, mainsString);
+            }
+
+            catch (Exception ex) 
+            { 
+                Console.WriteLine(ex.Message);
+            }
+
+            
 
         }
 
