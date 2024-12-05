@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Wpe.SharkCrane.Core.Models
 {
-    public class Spreader
+    public class Spreader : BaseCraneObject
     {
         private double width;
         public double Width 
@@ -23,7 +23,7 @@ namespace Wpe.SharkCrane.Core.Models
                 }
             } 
         }
-        public double Increment { get; set; }
+        
         public bool IsLocked { get; set; } = false;
 
     }
