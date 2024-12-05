@@ -32,6 +32,7 @@ while (true)
 
                                                                         
     await hiveClient.PublishServiceAsync("/hub/hoist/up", hoistString);                                                                    
+                                                             
 
     //We doen alsof we een message krijgen.
     await Task.Delay(1000);

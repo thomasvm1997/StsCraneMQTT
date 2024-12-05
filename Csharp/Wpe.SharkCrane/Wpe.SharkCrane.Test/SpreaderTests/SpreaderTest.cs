@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Models.CustomEventArgs;
 using Wpe.SharkCrane.Core.Services;
+using Wpe.SharkCrane.Core.Services.SpreaderService.SpreaderRoute;
+using Wpe.SharkCrane.Core.Services.SpreaderService;
+using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
+using Wpe.SharkCrane.Core.Services.HoistService.HoistRoute;
 
 namespace Wpe.SharkCrane.Test.SpreaderTests
 {
@@ -47,6 +51,119 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             Assert.Equal(isLocked, spreader.IsLocked);
         }
 
-        
+        [Fact]
+        public void ChangeMainProperties_SubscribeOpen_UpdatesWidthSuccessfully()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var spreaderService = new SpreaderService(mockHiveMQService.Object);
+
+            var mainSpreader = new Spreader { Width = 0 };
+            var spreader = new Spreader { Increment = 5 };
+
+            const string topic = SpreaderRoutes.SubscribeOpen;
+
+            // Act
+            var result = spreaderService.ChangeMainProperties(spreader, topic);
+
+            // Assert
+            Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
+            Assert.Equal(5, spreaderService.MainSpreader.Width);
+        }
+
+
+        [Fact]
+        public void ChangeMainProperties_SubscribeClose_UpdatesWidthSuccessfully()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var spreaderService = new SpreaderService(mockHiveMQService.Object);
+
+            var mainSpreader = new Spreader { Width = 10 };
+            var spreader = new Spreader { Increment = 5 };
+
+            const string topic = SpreaderRoutes.SubscribeOpen;
+
+            // Act
+            var result = spreaderService.ChangeMainProperties(spreader, topic);
+
+            // Assert
+            Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
+            Assert.Equal(5, spreaderService.MainSpreader.Width);
+        }
+        [Fact]
+        public void ChangeMainProperties_SubscribeLock_UpdatesLockSuccessfully()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var spreaderService = new SpreaderService(mockHiveMQService.Object);
+            
+            
+            var spreader = new Spreader { IsLocked = true };
+
+            const string topic = SpreaderRoutes.SubscribeLock;
+
+            // Act
+            var result = spreaderService.ChangeMainProperties(spreader, topic);
+
+            // Assert
+            Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
+            Assert.Equal(spreader.IsLocked, spreaderService.MainSpreader.IsLocked);
+        }
+        [Fact]
+        public void ChangeMainProperties_SubscribeUnLock_UpdatesLockSuccessfully()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var spreaderService = new SpreaderService(mockHiveMQService.Object);
+
+
+            var spreader = new Spreader { IsLocked = false };
+
+            const string topic = SpreaderRoutes.SubscribeUnlock;
+
+            // Act
+            var result = spreaderService.ChangeMainProperties(spreader, topic);
+
+            // Assert
+            Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
+            Assert.Equal(spreader.IsLocked, spreaderService.MainSpreader.IsLocked);
+        }
+        [Fact]
+        public void ChangeMainProperties_WithInvalidTopic_ReturnsError()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var spreaderService = new SpreaderService(mockHiveMQService.Object);
+
+
+            var spreader = new Spreader { IsLocked = false };
+
+            const string topic = HoistRoutes.SubscribeDown;
+
+            // Act
+            var result = spreaderService.ChangeMainProperties(spreader, topic);
+
+            // Assert
+            Assert.False(result.IsSuccess, "Expected ChangeMainProperties to fail for invalid topic.");
+            Assert.Contains($"{topic} is not recognized", result.Errors);
+        }
+        [Fact]
+        public void ChangeMainProperties_WithNullSpreader_ReturnsError()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var spreaderService = new SpreaderService(mockHiveMQService.Object);
+
+
+            const string topic = HoistRoutes.SubscribeDown;
+
+            // Act
+            var result = spreaderService.ChangeMainProperties(null, topic);
+
+            // Assert
+            Assert.False(result.IsSuccess, "Expected ChangeMainProperties to fail for invalid topic.");
+            Assert.Contains("Could not serialize received Spreader Object", result.Errors);
+        }
     }
 }

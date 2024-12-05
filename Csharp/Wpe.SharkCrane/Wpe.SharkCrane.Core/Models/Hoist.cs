@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Wpe.SharkCrane.Core.Models
 {
-    public class Hoist
+    public class Hoist : BaseCraneObject
     {
         private double length;
         public double Length 
@@ -26,6 +26,6 @@ namespace Wpe.SharkCrane.Core.Models
                 }
             }
         }
-        public double Increment { get; set; }
+        
     }
 }
