@@ -22,7 +22,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
 
 
             // Act
-            Hoist hoist = new Hoist { Length = length};
+            Hoist hoist = new Hoist { Length = length };
 
             // Assert
             Assert.NotNull(hoist);
@@ -49,7 +49,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
             var mockHiveMQService = new Moq.Mock<IHiveMQService>();
             var hoistService = new HoistService(mockHiveMQService.Object);
 
-            
+
             var hoist = new Hoist { Increment = 1 };
 
             const string topic = HoistRoutes.SubscribeUp;
@@ -61,6 +61,63 @@ namespace Wpe.SharkCrane.Test.HoistTests
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
             Assert.Equal(expectedValue, hoistService.MainHoist.Length);
+        }
+        [Fact]
+        public void ChangeMainProperties_SubscribeDown_UpdatesWidthSuccessfully()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var hoistService = new HoistService(mockHiveMQService.Object);
+
+
+            var hoist = new Hoist { Increment = 1 };
+
+            const string topic = HoistRoutes.SubscribeDown;
+            var expectedValue = hoistService.MainHoist.Length + hoist.Increment;
+
+            // Act
+            var result = hoistService.ChangeMainProperties(hoist, topic);
+
+            // Assert
+            Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
+            Assert.Equal(expectedValue, hoistService.MainHoist.Length);
+        }
+
+        [Fact]
+        public void ChangeMainProperties_WithInvalidTopic_ReturnsError()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var hoistService = new HoistService(mockHiveMQService.Object);
+
+
+            var hoist = new Hoist { Increment = 1 };
+
+            const string topic = SpreaderRoutes.SubscribeUnlock;
+
+
+            // Act
+            var result = hoistService.ChangeMainProperties(hoist, topic);
+            // Assert
+            Assert.False(result.IsSuccess, "Expected ChangeMainProperties to fail for invalid topic.");
+            Assert.Contains($"{topic} is not recognized", result.Errors);
+        }
+
+        [Fact]
+        public void ChangeMainProperties_WithNullSpreader_ReturnsError()
+        {
+            // Arrange
+            var mockHiveMQService = new Moq.Mock<IHiveMQService>();
+            var hoistService = new HoistService(mockHiveMQService.Object);
+
+            const string topic = HoistRoutes.SubscribeUp;
+
+            // Act
+            var result = hoistService.ChangeMainProperties(null, topic);
+
+            // Assert
+            Assert.False(result.IsSuccess, "Expected ChangeMainProperties to fail for invalid topic.");
+            Assert.Contains("Could not serialize received Hoist object", result.Errors);
         }
     }
 }

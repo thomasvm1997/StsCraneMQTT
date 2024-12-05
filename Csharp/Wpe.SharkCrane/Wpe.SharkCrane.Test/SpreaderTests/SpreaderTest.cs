@@ -59,8 +59,8 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             var spreaderService = new SpreaderService(mockHiveMQService.Object);
 
             
-            var spreader = new Spreader { Increment = 5 };
-
+            var spreader = new Spreader { Increment = 5d };
+            var expectedValue = spreaderService.MainSpreader.Width + spreader.Increment;
             const string topic = SpreaderRoutes.SubscribeOpen;
 
             // Act
@@ -68,7 +68,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(5, spreaderService.MainSpreader.Width);
+            Assert.Equal(expectedValue, spreaderService.MainSpreader.Width);
         }
 
 
@@ -81,15 +81,15 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
 
             
             var spreader = new Spreader { Increment = 5 };
-
-            const string topic = SpreaderRoutes.SubscribeOpen;
+            var expectedValue = spreaderService.MainSpreader.Width - spreader.Increment;
+            const string topic = SpreaderRoutes.SubscribeClose;
 
             // Act
             var result = spreaderService.ChangeMainProperties(spreader, topic);
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(5, spreaderService.MainSpreader.Width);
+            Assert.Equal(expectedValue, spreaderService.MainSpreader.Width);
         }
         [Fact]
         public void ChangeMainProperties_SubscribeLock_UpdatesLockSuccessfully()

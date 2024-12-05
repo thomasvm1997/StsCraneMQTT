@@ -24,7 +24,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            MainSpreader = new Spreader { IsLocked = false, Width = 4d};
+            MainSpreader = new Spreader { IsLocked = false, Width = 5d};
         }
 
         private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
