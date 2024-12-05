@@ -18,13 +18,13 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
     public class SpreaderService : ISpreaderService
     {
         private readonly IHiveMQService _hiveMQService;
-        private readonly Spreader mainSpreader;
+        public Spreader MainSpreader { get;}
         private string publishTopic;
         public SpreaderService(IHiveMQService hiveMQService)
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            mainSpreader = new Spreader();
+            MainSpreader = new Spreader { IsLocked = false, Width = 4d};
         }
 
         private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
@@ -35,7 +35,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
 
             BaseResultModel result = ChangeMainProperties(spreaderMessage, e.Topic);
 
-            string mainsString = JsonSerializer.Serialize(mainSpreader);
+            string mainsString = JsonSerializer.Serialize(MainSpreader);
 
 
             if (result.IsSuccess == true)
@@ -58,23 +58,23 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
                 {
 
                     case SpreaderRoutes.SubscribeOpen:
-                        mainSpreader.Width += spreaderMessage.Increment;
+                        MainSpreader.Width += spreaderMessage.Increment;
                         publishTopic = SpreaderRoutes.PublishOpen;
                         return new BaseResultModel { IsSuccess = true };
 
 
                     case SpreaderRoutes.SubscribeClose:
-                        mainSpreader.Width -= spreaderMessage.Increment;
+                        MainSpreader.Width -= spreaderMessage.Increment;
                         publishTopic = SpreaderRoutes.PublishClose;
                         return new BaseResultModel { IsSuccess = true };
                     
                     case SpreaderRoutes.SubscribeLock:
-                        mainSpreader.IsLocked = spreaderMessage.IsLocked;
+                        MainSpreader.IsLocked = spreaderMessage.IsLocked;
                         publishTopic = SpreaderRoutes.PublishLock;
                         return new BaseResultModel { IsSuccess = true };
 
                     case SpreaderRoutes.SubscribeUnlock:
-                        mainSpreader.IsLocked = spreaderMessage.IsLocked;
+                        MainSpreader.IsLocked = spreaderMessage.IsLocked;
                         publishTopic = SpreaderRoutes.PublishUnlock;
                         return new BaseResultModel { IsSuccess = true };
 

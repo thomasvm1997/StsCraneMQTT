@@ -33,8 +33,10 @@ while(true)
 {
     Console.WriteLine("listening");
     
-    await hiveClient.PublishServiceAsync("/hub/spreader/open", spreaderString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
-                                                                    //We doen alsof we een message krijgen.
+     //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+    await hiveClient.PublishServiceAsync("/hub/spreader/lock", spreaderString);       
+    await hiveClient.PublishServiceAsync("/hub/spreader/open", spreaderString);       
+    //We doen alsof we een message krijgen.
     await Task.Delay(1000);
 
 }
