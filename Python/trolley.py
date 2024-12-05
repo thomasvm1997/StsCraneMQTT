@@ -2,6 +2,9 @@ import time
 import json
 import paho.mqtt.client as paho
 from paho import mqtt
+from trolley_object import Trolley
+
+trolley = Trolley(x=100, y=300, width=50, height=20, min_x=50, max_x=750)
 
 # setting callbacks for different events to see if it works, print the message etc.
 def on_connect(client, userdata, flags, rc, properties=None):
@@ -19,7 +22,24 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 
 # print message, useful for checking if it was successful
 def on_message(client, userdata, msg):
-    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
+    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload)) #message content
+    try:
+        payload = json.loads(msg.payload.decode()) 
+        if msg.topic == "/hub/trolley":
+            if "command" in payload:
+                command = payload["command"]
+                if command == "move":
+                    direction = int(payload["direction"]) #-1 left, 1 right
+                    delta_time = time.time() - trolley.last_update #calculates time elapsed since last update
+                    trolley.move(direction, delta_time) #update position
+                elif command == "speed":
+                    trolley.set_speed(float(payload["speed"])) #sets speed
+                elif command == "stop":
+                    trolley.emergency_stop_action() #activates emergency stop
+                elif command == "release_stop":
+                    trolley.release_emergency_stop() #release emergency stop
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"Error parsing message: {e}")
 
 # using MQTT version 5 here, for 3.1.1: MQTTv311, 3.1: MQTTv31
 # userdata is user defined data of any type, updated by user_data_set()
