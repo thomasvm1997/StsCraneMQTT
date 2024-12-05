@@ -58,7 +58,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             var mockHiveMQService = new Moq.Mock<IHiveMQService>();
             var spreaderService = new SpreaderService(mockHiveMQService.Object);
 
-            var mainSpreader = new Spreader { Width = 0 };
+            
             var spreader = new Spreader { Increment = 5 };
 
             const string topic = SpreaderRoutes.SubscribeOpen;
@@ -79,7 +79,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             var mockHiveMQService = new Moq.Mock<IHiveMQService>();
             var spreaderService = new SpreaderService(mockHiveMQService.Object);
 
-            var mainSpreader = new Spreader { Width = 10 };
+            
             var spreader = new Spreader { Increment = 5 };
 
             const string topic = SpreaderRoutes.SubscribeOpen;

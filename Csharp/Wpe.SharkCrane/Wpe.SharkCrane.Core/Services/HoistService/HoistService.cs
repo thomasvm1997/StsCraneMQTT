@@ -14,14 +14,14 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
 {
     public class HoistService : IHoistService
     {
+        public Hoist MainHoist { get;}
         private readonly IHiveMQService _hiveMQService;
-        private readonly Hoist mainHoist;
         private string publishTopic;
         public HoistService(IHiveMQService hiveMQService)
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            mainHoist = new Hoist { Length = 4d};
+            MainHoist = new Hoist { Length = 4d};
         }
 
         private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
@@ -33,7 +33,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
 
             BaseResultModel result = ChangeMainProperties(hoistMessage, e.Topic);
 
-            string mainsString = JsonSerializer.Serialize(mainHoist);
+            string mainsString = JsonSerializer.Serialize(MainHoist);
            
 
             if(result.IsSuccess == true)
@@ -56,13 +56,13 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
                 {
 
                     case HoistRoutes.SubscribeUp:
-                        mainHoist.Length -= hoistMessage.Increment;
+                        MainHoist.Length -= hoistMessage.Increment;
                         publishTopic = HoistRoutes.PublishUp;
                         return new BaseResultModel { IsSuccess = true };
 
 
                     case HoistRoutes.SubscribeDown:
-                        mainHoist.Length += hoistMessage.Increment;
+                        MainHoist.Length += hoistMessage.Increment;
                         publishTopic = HoistRoutes.PublishDown;
                         return new BaseResultModel { IsSuccess = true };
 

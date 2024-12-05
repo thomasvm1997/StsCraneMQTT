@@ -17,8 +17,8 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
 {
     public class SpreaderService : ISpreaderService
     {
-        private readonly IHiveMQService _hiveMQService;
         public Spreader MainSpreader { get;}
+        private readonly IHiveMQService _hiveMQService;
         private string publishTopic;
         public SpreaderService(IHiveMQService hiveMQService)
         {
