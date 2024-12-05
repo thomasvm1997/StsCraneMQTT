@@ -24,7 +24,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
             mainHoist = new Hoist { Length = 4d};
         }
 
-        public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
+        private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
             
             Console.WriteLine($"HoistService received message on topic {e.Topic} : {e.Payload}");
@@ -47,7 +47,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
 
         }
 
-        private BaseResultModel ChangeMainProperties(Hoist hoistMessage, string topic)
+        public BaseResultModel ChangeMainProperties(Hoist hoistMessage, string topic)
         {
             if (hoistMessage != null) 
             {

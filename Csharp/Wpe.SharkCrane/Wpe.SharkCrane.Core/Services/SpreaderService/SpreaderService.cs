@@ -27,7 +27,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
             mainSpreader = new Spreader();
         }
 
-        public async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
+        private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
             Console.WriteLine($"HoistService received message on topic {e.Topic} : {e.Payload}");
 
@@ -49,7 +49,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
 
         }
 
-        private BaseResultModel ChangeMainProperties(Spreader spreaderMessage, string topic)
+        public BaseResultModel ChangeMainProperties(Spreader spreaderMessage, string topic)
         {
             if (spreaderMessage != null)
             {
@@ -57,15 +57,15 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
                 switch (topic)
                 {
 
-                    case SpreaderRoutes.SubscribeWiden:
+                    case SpreaderRoutes.SubscribeOpen:
                         mainSpreader.Width += spreaderMessage.Increment;
-                        publishTopic = SpreaderRoutes.PublishWiden;
+                        publishTopic = SpreaderRoutes.PublishOpen;
                         return new BaseResultModel { IsSuccess = true };
 
 
-                    case SpreaderRoutes.SubscribeNarrow:
+                    case SpreaderRoutes.SubscribeClose:
                         mainSpreader.Width -= spreaderMessage.Increment;
-                        publishTopic = SpreaderRoutes.PublishNarrow;
+                        publishTopic = SpreaderRoutes.PublishClose;
                         return new BaseResultModel { IsSuccess = true };
                     
                     case SpreaderRoutes.SubscribeLock:
