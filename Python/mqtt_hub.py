@@ -1,4 +1,5 @@
 import time
+import json
 import paho.mqtt.client as paho
 from paho import mqtt
 
@@ -37,15 +38,24 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 # Callback for receiving messages
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
+    try:
+        # Omzetten van de payload naar een JSON-object
+        json_object = json.loads(msg.payload.decode('utf-8'))
+        print("JSON object:", json_object)
+    except json.JSONDecodeError as e:
+        print(f"Failed to decode JSON: {e}")
+        return
+
     # Forward the message to the mapped topic
     if msg.topic in TOPIC_MAPPING:
         target_topic = TOPIC_MAPPING[msg.topic]
-        client.publish(target_topic, payload=msg.payload, qos=1)
-        print(f"Forwarded message from {msg.topic} to {target_topic}")
+        client.publish(target_topic, payload=json.dumps(json_object), qos=1)
+        print(f"Forwarded message from {msg.topic} to {target_topic} with payload: {json.dumps(json_object)}")
 
     # Forward every message to /hub/client
-    client.publish("/hub/client", payload=msg.payload, qos=1)
-    print(f"Forwarded message from {msg.topic} to /hub/client")
+    client.publish("/hub/client", payload=json.dumps(json_object), qos=1)
+    print(f"Forwarded message from {msg.topic} to /hub/client with payload: {json.dumps(json_object)}")
+
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)

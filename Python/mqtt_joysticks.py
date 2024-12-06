@@ -1,4 +1,5 @@
 import time
+import json
 import paho.mqtt.client as paho
 from paho import mqtt
 import keyboard  # Used to detect key presses
@@ -31,6 +32,12 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 # Callback for message receipt
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
+    try:
+        # Omzetten van de payload naar een JSON-object
+        json_object = json.loads(msg.payload.decode('utf-8'))
+        print(json_object)
+    except json.JSONDecodeError as e:
+        print(f"Failed to decode JSON: {e}")
 
 # Main method to check joystick key presses and send messages
 def check_joysticks(client):
@@ -43,52 +50,62 @@ def check_joysticks(client):
 
             # Gantry joystick
             if keyboard.is_pressed('w'):  # Move gantry forward
-                client.publish("/joystick/gantry", payload="joystick gantry forward", qos=1)
+                payload = json.dumps({"action": "joystick gantry forward"})
+                client.publish("/joystick/gantry", payload=payload, qos=1)
                 print("Gantry joystick forward")
                 time.sleep(0.3)
             elif keyboard.is_pressed('e'):  # Move gantry backward
-                client.publish("/joystick/gantry", payload="joystick gantry backward", qos=1)
+                payload = json.dumps({"action": "joystick gantry backward"})
+                client.publish("/joystick/gantry", payload=payload, qos=1)
                 print("Gantry joystick backward")
                 time.sleep(0.3)
 
             elif keyboard.is_pressed('5'):  # Emergency stop for gantry
-                client.publish("/joystick/emergency-stop", payload="emergency stop activated", qos=1)
+                payload = json.dumps({"action": "emergency stop activated"})
+                client.publish("/joystick/emergency-stop", payload=payload, qos=1)
                 print("Emergency stop activated")
                 time.sleep(0.3)
 
             # Trolley joystick
             if keyboard.is_pressed('s'):  # Move trolley left
-                client.publish("/joystick/trolley", payload="joystick trolley left", qos=1)
+                payload = json.dumps({"action": "joystick trolley left"})
+                client.publish("/joystick/trolley", payload=payload, qos=1)
                 print("Trolley joystick left")
                 time.sleep(0.3)
             elif keyboard.is_pressed('d'):  # Move trolley right
-                client.publish("/joystick/trolley", payload="joystick trolley right", qos=1)
+                payload = json.dumps({"action": "joystick trolley right"})
+                client.publish("/joystick/trolley", payload=payload, qos=1)
                 print("Trolley joystick right")
                 time.sleep(0.3)
 
             # Hoist joystick
             if keyboard.is_pressed('x'):  # Move hoist up
-                client.publish("/joystick/hoist", payload="joystick hoist up", qos=1)
+                payload = json.dumps({"action": "joystick hoist up"})
+                client.publish("/joystick/hoist", payload=payload, qos=1)
                 print("Hoist joystick up")
                 time.sleep(0.3)
             elif keyboard.is_pressed('c'):  # Move hoist down
-                client.publish("/joystick/hoist", payload="joystick hoist down", qos=1)
+                payload = json.dumps({"action": "joystick hoist down"})
+                client.publish("/joystick/hoist", payload=payload, qos=1)
                 print("Hoist joystick down")
                 time.sleep(0.3)
 
             # Handbrake
             if keyboard.is_pressed('4'):
-                client.publish("/joystick/handbrake", payload="handbrake active", qos=1)
+                payload = json.dumps({"action": "handbrake active"})
+                client.publish("/joystick/handbrake", payload=payload, qos=1)
                 print("Handbrake active")
                 time.sleep(0.3)        
 
             elif keyboard.is_pressed('6'):  # spreader
-                client.publish("/joystick/spreader", payload="spreader activated", qos=1)
+                payload = json.dumps({"action": "spreader activated"})
+                client.publish("/joystick/spreader", payload=payload, qos=1)
                 print("Spreader activated")
                 time.sleep(0.3)
             
             elif keyboard.is_pressed('7'):  # spreader lock
-                client.publish("/joystick/spreader", payload="spreder lock activated", qos=1)
+                payload = json.dumps({"action": "spreader lock activated"})
+                client.publish("/joystick/spreader", payload=payload, qos=1)
                 print("Spreader lock activated")
                 time.sleep(0.3)
 
@@ -112,7 +129,7 @@ client.on_subscribe = on_subscribe
 client.on_message = on_message
 
 # Enable TLS for secure connection
-client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+client.tls_set(tls_version=paho.ssl.PROTOCOL_TLS)
 
 # Set username and password for MQTT
 client.username_pw_set("shark", "FishFish1")
