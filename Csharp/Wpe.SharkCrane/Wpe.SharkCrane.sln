@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.SpreaderClient.Console", "Wpe.SharkCrane.Cosnole\Wpe.SpreaderClient.Console.csproj", "{AB53F74B-EA4F-4BFB-A3B4-A453C3C435A1}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.SharkCrane.Core", "Wpe.SharkCrane.Core\Wpe.SharkCrane.Core.csproj", "{7D208DEE-ACD3-48A3-A32C-36998EF6DB19}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.SharkCrane.Test", "Wpe.SharkCrane.Test\Wpe.SharkCrane.Test.csproj", "{E6FA5C99-48C6-4EA4-A4C9-02595F288AAD}"
@@ -13,16 +11,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.HoistClient.Console", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Consoles", "Consoles", "{649022E7-34C2-4CBA-A33C-2E70584CCC47}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.SpreaderClient.Console", "Wpe.SpreaderClient.Console\Wpe.SpreaderClient.Console.csproj", "{AC939F6E-6FC6-4CF4-9C93-0F38FDBAB31F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.GantryClient.Console", "Wpe.GantryClient.Console\Wpe.GantryClient.Console.csproj", "{BAF147D5-45FD-44C5-9954-0D646AF9E677}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AB53F74B-EA4F-4BFB-A3B4-A453C3C435A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AB53F74B-EA4F-4BFB-A3B4-A453C3C435A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AB53F74B-EA4F-4BFB-A3B4-A453C3C435A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AB53F74B-EA4F-4BFB-A3B4-A453C3C435A1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7D208DEE-ACD3-48A3-A32C-36998EF6DB19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7D208DEE-ACD3-48A3-A32C-36998EF6DB19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D208DEE-ACD3-48A3-A32C-36998EF6DB19}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -35,13 +33,22 @@ Global
 		{C171EC2E-8A15-4DF9-9CA5-FCFB9CAE8874}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C171EC2E-8A15-4DF9-9CA5-FCFB9CAE8874}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C171EC2E-8A15-4DF9-9CA5-FCFB9CAE8874}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC939F6E-6FC6-4CF4-9C93-0F38FDBAB31F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC939F6E-6FC6-4CF4-9C93-0F38FDBAB31F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC939F6E-6FC6-4CF4-9C93-0F38FDBAB31F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC939F6E-6FC6-4CF4-9C93-0F38FDBAB31F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAF147D5-45FD-44C5-9954-0D646AF9E677}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAF147D5-45FD-44C5-9954-0D646AF9E677}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAF147D5-45FD-44C5-9954-0D646AF9E677}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAF147D5-45FD-44C5-9954-0D646AF9E677}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{AB53F74B-EA4F-4BFB-A3B4-A453C3C435A1} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
 		{C171EC2E-8A15-4DF9-9CA5-FCFB9CAE8874} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
+		{AC939F6E-6FC6-4CF4-9C93-0F38FDBAB31F} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
+		{BAF147D5-45FD-44C5-9954-0D646AF9E677} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EE7D1DA8-F0DC-4C2B-8420-4EACADC3A3AC}
