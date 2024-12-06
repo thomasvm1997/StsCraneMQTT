@@ -9,9 +9,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Models.CustomEventArgs;
-using Wpe.SharkCrane.Core.Services.Interfaces;
+using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
 
-namespace Wpe.SharkCrane.Core.Services
+namespace Wpe.SharkCrane.Core.Services.HiveService
 {
     public class HiveMQService : IHiveMQService
     {
@@ -19,7 +19,7 @@ namespace Wpe.SharkCrane.Core.Services
 
         public event EventHandler<CustomMessageReceivedEventArgs> MessageReceived;
 
-        public HiveMQService() 
+        public HiveMQService()
         {
 
             var options = new HiveMQClientOptions();
@@ -45,7 +45,7 @@ namespace Wpe.SharkCrane.Core.Services
 
 
                 MessageReceived?.Invoke(this, new CustomMessageReceivedEventArgs(args.PublishMessage.PayloadAsString));
-                
+
             };
         }
 
@@ -57,9 +57,9 @@ namespace Wpe.SharkCrane.Core.Services
 
         public async Task SubscribeAsync(string topic)
         {
-           var r = await _client.SubscribeAsync(topic);
+            var r = await _client.SubscribeAsync(topic);
             Console.WriteLine($"Subscribed to topic: {topic}");
-            
+
         }
     }
 }

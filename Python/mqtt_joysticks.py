@@ -2,26 +2,34 @@ import time
 import json
 import paho.mqtt.client as paho
 from paho import mqtt
-import keyboard  # Used to detect key presses
+import keyboard  # Detects key presses
 
-# Mapping subscription topics to their respective mapped names
-TOPIC_MAPPING = {
-    "/joystick/gantry": "/hub/joystick/gantry",
-    "/joystick/hoist": "/hub/joystick/hoist",
-    "/joystick/trolley": "/hub/joystick/trolley",
-    "/joystick/emergency-stop": "/hub/joystick/emergency-stop",
-    "/joystick/handbrake": "/hub/joystick/handbrake"
+# Joystick action topics based on the provided list
+JOYSTICK_TOPICS = {
+    "gantry_left": "/joysticks/gantry/left",
+    "gantry_right": "/joysticks/gantry/right",
+    "gantry_handbrake_lock": "/joysticks/gantry/handbrake/lock",
+    "gantry_handbrake_release": "/joysticks/gantry/handbrake/release",
+    "hoist_up": "/joysticks/hoist/up",
+    "hoist_down": "/joysticks/hoist/down",
+    "trolley_forward": "/joysticks/trolley/forward",
+    "trolley_backward": "/joysticks/trolley/backward",
+    "spreader_widen": "/joysticks/spreader/widen",
+    "spreader_narrow": "/joysticks/spreader/narrow",
+    "spreader_lock": "/joysticks/spreader/lock",
+    "spreader_unlock": "/joysticks/spreader/unlock",
+    "emergency_lock": "/joysticks/emergency/lock",
+    "emergency_unlock": "/joysticks/emergency/unlock"
 }
 
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
-    print("CONNACK received with code %s." % rc)
-    # Subscribe to mapped topics
-    for topic in TOPIC_MAPPING.values():
-        client.subscribe(topic, qos=1)
-        print(f"Subscribed to {topic}")
+    if rc == 0:
+        print("Connected successfully!")
+    else:
+        print(f"Failed to connect, return code: {rc}")
 
-# Callback for publish success
+# Callback for publish confirmation
 def on_publish(client, userdata, mid, properties=None):
     print("mid: " + str(mid))
 
@@ -38,10 +46,11 @@ def on_message(client, userdata, msg):
         print(json_object)
     except json.JSONDecodeError as e:
         print(f"Failed to decode JSON: {e}")
+    print(f"Message published successfully - MID: {mid}")
 
-# Main method to check joystick key presses and send messages
-def check_joysticks(client):
-    print("Controlling joysticks. Press 'q' to quit.")
+# Main function to handle joystick key presses and send MQTT messages
+def joystick_controller(client):
+    print("Joystick control activated. Press 'q' to quit.")
     try:
         while True:
             if keyboard.is_pressed('q'):
@@ -109,35 +118,34 @@ def check_joysticks(client):
                 print("Spreader lock activated")
                 time.sleep(0.3)
 
-        else:
-            # No key pressed, no action
-            time.sleep(0.1)  # Sleep for a small time to avoid high CPU usage
+            # Avoid high CPU usage
+            time.sleep(0.1)
+
     except KeyboardInterrupt:
-        print("Exiting...")
+        print("Joystick control interrupted.")
 
     finally:
         client.loop_stop()
         client.disconnect()
+        print("MQTT client disconnected.")
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
 
-# Set callbacks
+# Set MQTT callbacks
 client.on_connect = on_connect
 client.on_publish = on_publish
-client.on_subscribe = on_subscribe
-client.on_message = on_message
 
 # Enable TLS for secure connection
 client.tls_set(tls_version=paho.ssl.PROTOCOL_TLS)
 
-# Set username and password for MQTT
+# Set MQTT username and password
 client.username_pw_set("shark", "FishFish1")
 
-# Connect to HiveMQ broker
+# Connect to the HiveMQ broker
 client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 
-# Start the MQTT loop in the background
+# Start the MQTT client loop in the background
 client.loop_start()
 
 # Run the joystick check method
