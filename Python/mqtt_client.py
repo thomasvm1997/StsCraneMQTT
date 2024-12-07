@@ -4,6 +4,7 @@ import paho.mqtt.client as paho
 from paho import mqtt
 import pygame
 from pygame.locals import *
+from threading import Thread
 
 # Initialize Pygame
 pygame.init()
@@ -21,23 +22,25 @@ FONT = pygame.font.Font(None, 36)
 # Dictionary to store incoming data for display
 data_dict = {}
 
+# MQTT Topics
+topics = [
+    "/hub/gantry/handbrake/lock",
+    "/hub/gantry/handbrake/release",
+    "/hub/gantry/location",
+    "/hub/hoist/location",
+    "/hub/trolley/location",
+    "/hub/spreader/widen",
+    "/hub/spreader/narrow",
+    "/hub/spreader/lock",
+    "/hub/spreader/unlock"
+]
+
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print("Client connected successfully to broker.")
         
         # Subscribe to required topics
-        topics = [
-            "/hub/gantry/handbrake/lock",
-            "/hub/gantry/handbrake/release",
-            "/hub/gantry/location",
-            "/hub/hoist/location",
-            "/hub/trolley/location",
-            "/hub/spreader/widen",
-            "/hub/spreader/narrow",
-            "/hub/spreader/lock",
-            "/hub/spreader/unlock"
-        ]
         for topic in topics:
             client.subscribe(topic, qos=1)
         
@@ -54,6 +57,14 @@ def on_message(client, userdata, msg):
         data_dict[msg.topic] = json_object
     except json.JSONDecodeError:
         data_dict[msg.topic] = msg.payload.decode('utf-8')
+
+# Mock data generator
+def mock_data_generator():
+    while True:
+        for topic in topics:
+            mock_message = json.dumps({"value": f"Mock data for {topic}", "timestamp": time.time()})
+            on_message(client, None, type("MQTTMessage", (), {"topic": topic, "payload": mock_message.encode('utf-8')}))
+            time.sleep(0.5)
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
@@ -73,6 +84,10 @@ client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 
 # Start the MQTT loop in the background
 client.loop_start()
+
+# Start the mock data generator in a separate thread
+mock_thread = Thread(target=mock_data_generator, daemon=True)
+mock_thread.start()
 
 # Main loop
 running = True
