@@ -60,9 +60,21 @@ def on_message(client, userdata, msg):
 
 # Mock data generator
 def mock_data_generator():
+    mock_values = {
+        "/hub/gantry/handbrake/lock": "Locked",
+        "/hub/gantry/handbrake/release": "Released",
+        "/hub/gantry/location": "East Section",
+        "/hub/hoist/location": "top",
+        "/hub/trolley/location": "Middle",
+        "/hub/spreader/widen": "Widening",
+        "/hub/spreader/narrow": "Narrowing",
+        "/hub/spreader/lock": "Locked",
+        "/hub/spreader/unlock": "Unlocked"
+    }
+
     while True:
-        for topic in topics:
-            mock_message = json.dumps({"value": f"Mock data for {topic}", "timestamp": time.time()})
+        for topic, value in mock_values.items():
+            mock_message = json.dumps({"value": value, "timestamp": time.time()})
             on_message(client, None, type("MQTTMessage", (), {"topic": topic, "payload": mock_message.encode('utf-8')}))
             time.sleep(0.5)
 
