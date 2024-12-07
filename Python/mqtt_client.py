@@ -14,10 +14,10 @@ def on_connect(client, userdata, flags, rc, properties=None):
         client.subscribe("/hub/gantry/location", qos=1)
         client.subscribe("/hub/hoist/location", qos=1)
         client.subscribe("/hub/trolley/location", qos=1)
-        client.subscribe("/hub/spreader/status/open", qos=1)
-        client.subscribe("/hub/spreader/status/closed", qos=1)
-        client.subscribe("/hub/spreader/status/locked", qos=1)
-        client.subscribe("/hub/spreader/status/unlocked", qos=1)
+        client.subscribe("/hub/spreader/widen", qos=1)
+        client.subscribe("/hub/spreader/narrow", qos=1)
+        client.subscribe("/hub/spreader/lock", qos=1)
+        client.subscribe("/hub/spreader/unlock", qos=1)
         
         print("Client subscribed to all topics.")
     else:
