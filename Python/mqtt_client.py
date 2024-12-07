@@ -2,6 +2,24 @@ import time
 import json
 import paho.mqtt.client as paho
 from paho import mqtt
+import pygame
+from pygame.locals import *
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions and setup
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("MQTT Data Viewer")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+FONT = pygame.font.Font(None, 36)
+
+# Dictionary to store incoming data for display
+data_dict = {}
 
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
@@ -9,45 +27,39 @@ def on_connect(client, userdata, flags, rc, properties=None):
         print("Client connected successfully to broker.")
         
         # Subscribe to required topics
-        client.subscribe("/hub/gantry/handbrake/lock", qos=1)
-        client.subscribe("/hub/gantry/handbrake/release", qos=1)
-        client.subscribe("/hub/gantry/location", qos=1)
-        client.subscribe("/hub/hoist/location", qos=1)
-        client.subscribe("/hub/trolley/location", qos=1)
-        client.subscribe("/hub/spreader/widen", qos=1)
-        client.subscribe("/hub/spreader/narrow", qos=1)
-        client.subscribe("/hub/spreader/lock", qos=1)
-        client.subscribe("/hub/spreader/unlock", qos=1)
+        topics = [
+            "/hub/gantry/handbrake/lock",
+            "/hub/gantry/handbrake/release",
+            "/hub/gantry/location",
+            "/hub/hoist/location",
+            "/hub/trolley/location",
+            "/hub/spreader/widen",
+            "/hub/spreader/narrow",
+            "/hub/spreader/lock",
+            "/hub/spreader/unlock"
+        ]
+        for topic in topics:
+            client.subscribe(topic, qos=1)
         
         print("Client subscribed to all topics.")
     else:
         print(f"Failed to connect, return code {rc}")
 
-# Callback for successful publish
-def on_publish(client, userdata, mid, properties=None):
-    print(f"Message published successfully with MID: {mid}")
-
-# Callback for subscription success
-def on_subscribe(client, userdata, mid, granted_qos, properties=None):
-    print(f"Subscribed successfully - MID: {mid}, QoS: {granted_qos}")
-
 # Callback for receiving messages
 def on_message(client, userdata, msg):
     print(f"Client received message - Topic: {msg.topic}, Payload: {msg.payload.decode('utf-8')}")
     try:
-        # Convert the payload to a JSON object
-        json_object = json.loads(msg.payload.decode('utf-8'))
-        print("JSON object:", json_object)
-    except json.JSONDecodeError as e:
-        print(f"Failed to decode JSON: {e}")
+        payload = msg.payload.decode('utf-8')
+        json_object = json.loads(payload)
+        data_dict[msg.topic] = json_object
+    except json.JSONDecodeError:
+        data_dict[msg.topic] = msg.payload.decode('utf-8')
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
 
 # Assign callbacks
 client.on_connect = on_connect
-client.on_publish = on_publish
-client.on_subscribe = on_subscribe
 client.on_message = on_message
 
 # Enable TLS for secure connection
@@ -62,12 +74,30 @@ client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 # Start the MQTT loop in the background
 client.loop_start()
 
-# Keep the script running
+# Main loop
+running = True
+clock = pygame.time.Clock()
+
 try:
-    while True:
-        time.sleep(1)
+    while running:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
+        
+        screen.fill(WHITE)
+        y_offset = 10
+        for topic, message in data_dict.items():
+            text_surface = FONT.render(f"{topic}: {message}", True, BLACK)
+            screen.blit(text_surface, (10, y_offset))
+            y_offset += 40
+
+        pygame.display.flip()
+
+        clock.tick(30)
+
 except KeyboardInterrupt:
     print("Exiting...")
 finally:
     client.loop_stop()
     client.disconnect()
+    pygame.quit()
