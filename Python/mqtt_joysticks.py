@@ -48,63 +48,63 @@ def joystick_controller(client):
             elif keyboard.is_pressed('d'):  # Gantry move right
                 client.publish(JOYSTICK_TOPICS["gantry_right"], "gantry right", qos=1)
                 print("Gantry right")
-                time.sleep(0.3)
+                time.sleep(1)
             elif keyboard.is_pressed('1'):  # Gantry handbrake lock
                 client.publish(JOYSTICK_TOPICS["gantry_handbrake_lock"], "handbrake lock", qos=1)
                 print("Gantry handbrake lock")
-                time.sleep(0.3)
+                time.sleep(1)
             elif keyboard.is_pressed('2'):  # Gantry handbrake release
                 client.publish(JOYSTICK_TOPICS["gantry_handbrake_release"], "handbrake release", qos=1)
                 print("Gantry handbrake release")
-                time.sleep(0.3)
+                time.sleep(1)
 
             # Hoist actions
             if keyboard.is_pressed('w'):  # Hoist up
                 client.publish(JOYSTICK_TOPICS["hoist_up"], "hoist up", qos=1)
                 print("Hoist up")
-                time.sleep(0.3)
+                time.sleep(1)
             elif keyboard.is_pressed('s'):  # Hoist down
                 client.publish(JOYSTICK_TOPICS["hoist_down"], "hoist down", qos=1)
                 print("Hoist down")
-                time.sleep(0.3)
+                time.sleep(1)
 
             # Trolley actions
             if keyboard.is_pressed('i'):  # Trolley forward
                 client.publish(JOYSTICK_TOPICS["trolley_forward"], "trolley forward", qos=1)
                 print("Trolley forward")
-                time.sleep(0.3)
+                time.sleep(1)
             elif keyboard.is_pressed('k'):  # Trolley backward
                 client.publish(JOYSTICK_TOPICS["trolley_backward"], "trolley backward", qos=1)
                 print("Trolley backward")
-                time.sleep(0.3)
+                time.sleep(1)
 
             # Spreader actions
             if keyboard.is_pressed('o'):  # Spreader widen
                 client.publish(JOYSTICK_TOPICS["spreader_widen"], "spreader widen", qos=1)
                 print("Spreader widen")
-                time.sleep(0.3)
+                time.sleep(1)
             elif keyboard.is_pressed('l'):  # Spreader narrow
                 client.publish(JOYSTICK_TOPICS["spreader_narrow"], "spreader narrow", qos=1)
                 print("Spreader narrow")
-                time.sleep(0.3)
+                time.sleep(1)
             elif keyboard.is_pressed('p'):  # Spreader lock
                 client.publish(JOYSTICK_TOPICS["spreader_lock"], "spreader lock", qos=1)
                 print("Spreader lock")
-                time.sleep(0.3)
+                time.sleep(1)
             elif keyboard.is_pressed(';'):  # Spreader unlock
                 client.publish(JOYSTICK_TOPICS["spreader_unlock"], "spreader unlock", qos=1)
                 print("Spreader unlock")
-                time.sleep(0.3)
+                time.sleep(1)
 
             # Emergency actions
             if keyboard.is_pressed('z'):  # Emergency lock
                 client.publish(JOYSTICK_TOPICS["emergency_lock"], "emergency lock", qos=1)
                 print("Emergency lock")
-                time.sleep(0.3)
+                time.sleep(1)
             elif keyboard.is_pressed('x'):  # Emergency unlock
                 client.publish(JOYSTICK_TOPICS["emergency_unlock"], "emergency unlock", qos=1)
                 print("Emergency unlock")
-                time.sleep(0.3)
+                time.sleep(1)
 
             # Avoid high CPU usage
             time.sleep(0.1)
