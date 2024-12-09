@@ -8,7 +8,22 @@ namespace Wpe.SharkCrane.Core.Models
 {
     public class Gantry : BaseCraneObject
     {
-        public double Distance { get; set; }
+        private double distance;
+        public double Distance 
+        {
+            get { return distance; }
+            set
+            {
+                if (value <= 0)
+                {
+                    distance = 0;
+                }
+                else
+                {
+                    distance = value;
+                }
+            }
+        }
         public bool IsHandBrakeOn {  get; set; } 
     }
 }

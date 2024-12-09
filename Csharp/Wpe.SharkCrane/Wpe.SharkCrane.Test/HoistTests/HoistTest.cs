@@ -30,7 +30,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
         }
 
         [Fact]
-        public void CreateSpreaderObject_WithLengthLowerThanMinimum_ReturnsSpreaderObjectWithCorrectedProperties()
+        public void CreateHoistObject_WithLengthLowerThanMinimum_ReturnsSpreaderObjectWithCorrectedProperties()
         {
             // Arrange
             double length = -5d;
