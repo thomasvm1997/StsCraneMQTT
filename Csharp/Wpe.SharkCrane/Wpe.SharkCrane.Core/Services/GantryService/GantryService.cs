@@ -82,7 +82,7 @@ namespace Wpe.SharkCrane.Core.Services.GantryService
             }
             else
             {
-                var list = new List<string> { "Could not serialize received Spreader Object" };
+                var list = new List<string> { "Could not serialize received Gantry Object" };
                 return new BaseResultModel { IsSuccess = false, Errors = list };
             }
         }

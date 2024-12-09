@@ -60,7 +60,8 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
 
             
             var spreader = new Spreader { Increment = 5d };
-            var expectedValue = spreaderService.MainSpreader.Width + spreader.Increment;
+            var calculatedWidth = spreaderService.MainSpreader.Width + spreader.Increment;
+            var expectedValue = calculatedWidth >= 12.5d ? 12.5d : calculatedWidth;
             const string topic = SpreaderRoutes.SubscribeOpen;
 
             // Act
