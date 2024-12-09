@@ -13,8 +13,8 @@ namespace Wpe.SharkCrane.Core.Services.HiveService.Interfaces
         event EventHandler<CustomMessageReceivedEventArgs> MessageReceived;
 
         public Task ConnectAsync();
-        public Task SubscribeAsync(string topic);
-        public Task PublishAsync(string topic, string payload);
+        public Task SubscribeServiceAsync(string topic);
+        public Task PublishServiceAsync(string topic, string payload);
 
     }
 }
