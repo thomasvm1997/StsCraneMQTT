@@ -111,10 +111,10 @@ try:
             if event.type == QUIT:
                 running = False
         
-        screen.fill(WHITE)
+        screen.fill(BLACK)
         y_offset = 10
         for topic, message in data_dict.items():
-            text_surface = FONT.render(f"{topic}: {message}", True, BLACK)
+            text_surface = FONT.render(f"{topic}: {message}", True, WHITE)
             screen.blit(text_surface, (10, y_offset))
             y_offset += 40
 
