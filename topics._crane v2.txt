@@ -87,10 +87,10 @@ SPREADER
 		/hub/spreader/lock
 		/hub/spreader/unlock
 	Publish:
-		/spreader/status/widen
-		/spreader/status/narrow
-		/spreader/status/lock
-		/spreader/status/unlock
+		/spreader/widen
+		/spreader/narrow
+		/spreader/lock
+		/spreader/unlock
 
 
 CLIENT
