@@ -22,7 +22,7 @@ sts_image = pygame.transform.scale(sts_image, (400, 300))
 
 # Load and scale the back image
 sts_back_image = pygame.image.load("../assets/STS_back.png")  
-sts_back_image = pygame.transform.scale(sts_back_image, (95, 365))
+sts_back_image = pygame.transform.scale(sts_back_image, (90, 425))
 
 # Initial dot position and line height
 dot_x = 300
@@ -30,8 +30,8 @@ dot_y = 200
 line_fixed_height = 123
 
 # New dot for the bottom of the screen
-bottom_dot_x = WIDTH // 2  # Horizontal center of the bottom screen
-bottom_dot_y = HEIGHT - 20  # A bit above the bottom (in this case, 20 pixels above)
+bottom_dot_x = (WIDTH // 2)  # Horizontal center of the bottom screen
+bottom_dot_y = (HEIGHT - 100)  # A bit above the bottom (in this case, 20 pixels above)
 
 # Dictionary to hold incoming MQTT data
 data_dict = {}
@@ -122,15 +122,15 @@ try:
         pygame.draw.circle(screen, RED, (bottom_dot_x, bottom_dot_y), 5)  # Red dot
 
         # Draw a line from the bottom red dot to a fixed height
-        pygame.draw.line(screen, BLACK, (bottom_dot_x, bottom_dot_y), (bottom_dot_x, 430), 2)  # Line to fixed height
+        pygame.draw.line(screen, BLACK, (bottom_dot_x, bottom_dot_y), (bottom_dot_x, 400), 2)  # Line to fixed height
 
         # Draw the STS_back image centered in the bottom rectangle, 10px higher (after drawing the line)
         back_image_x = (WIDTH - sts_back_image.get_width()) // 2  
-        back_image_y = 300 + (HEIGHT - 300 - sts_back_image.get_height()) // 2 - 10  # Vertical center with 10px higher offset
+        back_image_y = 300 + (HEIGHT - 300 - sts_back_image.get_height()) // 2 - 47  # Vertical center with 10px higher offset
         screen.blit(sts_back_image, (back_image_x, back_image_y))  # Draw image after the line to ensure it is on top
 
-        # Draw the black field from the bottom to 10 pixels high (cover the full width)
-        pygame.draw.rect(screen, BLACK, (0, HEIGHT - 10, WIDTH, 10))
+        # Draw the black field from the bottom to 30 pixels high (cover the full width)
+        pygame.draw.rect(screen, BLACK, (0, HEIGHT - 30, WIDTH, 30))
 
         pygame.display.flip()
 
