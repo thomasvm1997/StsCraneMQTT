@@ -1,104 +1,89 @@
+import pygame
 import json
 import paho.mqtt.client as paho
 from paho import mqtt
-import pygame
-from pygame.locals import *
+import time
 
 # Initialize Pygame
 pygame.init()
 
 # Screen dimensions and setup
-WIDTH, HEIGHT = 1200, 600
+WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("MQTT Data Viewer with Crane Views")
+pygame.display.set_caption("MQTT Data Viewer")
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GRAY = (50, 50, 50)
-LIGHT_BLUE = (173, 216, 230)  # Light blue color
-FONT = pygame.font.Font(None, 24)
+RED = (255, 0, 0)
+LIGHT_BLUE = (173, 216, 230)
+FONT = pygame.font.Font(None, 36)
 
-# State variables
-handbrake_locked = None
-spreader_locked = None
-emergency_button_pressed = None
+sts_image = pygame.image.load("../assets/STS_side.png")  
+sts_image = pygame.transform.scale(sts_image, (400, 300))  
+
+dot_x = 200  
+dot_y = 250 
+
+
+line_height = 78
+
+# Dictionary to store incoming data for display
+data_dict = {}
 
 # MQTT Topics
 topics = [
     "/hub/gantry/handbrake/lock",
     "/hub/gantry/handbrake/release",
+    "/hub/gantry/location",
+    "/hub/hoist/location",
+    "/hub/trolley/location",
+    "/hub/spreader/widen",
+    "/hub/spreader/narrow",
     "/hub/spreader/lock",
-    "/hub/spreader/unlock",
-    "/hub/emergency/button/press",
-    "/hub/emergency/button/release",
+    "/hub/spreader/unlock"
 ]
 
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print("Client connected successfully to broker.")
+        
+        # Subscribe to required topics
         for topic in topics:
             client.subscribe(topic, qos=1)
+        
         print("Client subscribed to all topics.")
     else:
         print(f"Failed to connect, return code {rc}")
 
 # Callback for receiving messages
 def on_message(client, userdata, msg):
-    global handbrake_locked, spreader_locked, emergency_button_pressed
-
-    payload = msg.payload.decode('utf-8')
-    print(f"Client received message - Topic: {msg.topic}, Payload: {payload}")
+    print(f"Client received message - Topic: {msg.topic}, Payload: {msg.payload.decode('utf-8')}")
     try:
-        payload_data = json.loads(payload)
-        value = payload_data.get("value", "")
-
-        # Update state based on the topic
-        if msg.topic == "/hub/gantry/handbrake/lock":
-            handbrake_locked = True
-        elif msg.topic == "/hub/gantry/handbrake/release":
-            handbrake_locked = False
-        elif msg.topic == "/hub/spreader/lock":
-            spreader_locked = True
-        elif msg.topic == "/hub/spreader/unlock":
-            spreader_locked = False
-        elif msg.topic == "/hub/emergency/button/press":
-            emergency_button_pressed = True
-        elif msg.topic == "/hub/emergency/button/release":
-            emergency_button_pressed = False
-
+        payload = msg.payload.decode('utf-8')
+        json_object = json.loads(payload)
+        data_dict[msg.topic] = json_object
     except json.JSONDecodeError:
-        print(f"Invalid JSON payload received on topic {msg.topic}")
-
-# Display message customization
-def get_display_message():
-    """Generate display messages for the state variables."""
-    messages = []
-    if handbrake_locked is not None:
-        messages.append(f"Handbrake: {'Locked' if handbrake_locked else 'Unlocked'}")
-    if spreader_locked is not None:
-        messages.append(f"Spreader: {'Locked' if spreader_locked else 'Unlocked'}")
-    if emergency_button_pressed is not None:
-        messages.append(f"Emergency Button: {'Pressed' if emergency_button_pressed else 'Released'}")
-    return messages
-
-# Draw STS Crane (placeholder graphics)
-def draw_sts_crane_side_view(surface, x, y):
-    pygame.draw.rect(surface, GRAY, (x, y, 200, 400))  # Crane base
-    pygame.draw.line(surface, WHITE, (x+100, y), (x+100, y-100), 3)  # Hoist
-
-def draw_sts_crane_rear_view(surface, x, y):
-    pygame.draw.rect(surface, GRAY, (x, y, 400, 200))  # Rear crane base
-    pygame.draw.line(surface, WHITE, (x+200, y), (x+200, y-100), 3)  # Hoist
+        data_dict[msg.topic] = msg.payload.decode('utf-8')
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
+
+# Assign callbacks
 client.on_connect = on_connect
 client.on_message = on_message
+
+# Enable TLS for secure connection
 client.tls_set(tls_version=paho.ssl.PROTOCOL_TLS)
+
+# Set username and password for MQTT
 client.username_pw_set("shark", "FishFish1")
+
+# Connect to HiveMQ broker
 client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
+
+# Start the MQTT loop in the background
 client.loop_start()
 
 # Main loop
@@ -108,36 +93,31 @@ clock = pygame.time.Clock()
 try:
     while running:
         for event in pygame.event.get():
-            if event.type == QUIT:
+            if event.type == pygame.QUIT:
                 running = False
+        
+        screen.fill(LIGHT_BLUE)
 
-        screen.fill(BLACK)
+        screen.blit(sts_image, (0, 50))
+        pygame.draw.circle(screen, RED, (dot_x, dot_y), 10)
+        pygame.draw.line(screen, BLACK, (dot_x, dot_y), (dot_x, dot_y - line_height), 2)
+        pygame.draw.rect(screen, WHITE, (0, 350, WIDTH, HEIGHT - 350), 2)  
 
-        # Section 1: Display State Data
-        section1_rect = pygame.Rect(0, 0, WIDTH // 3, HEIGHT)
-        pygame.draw.rect(screen, BLACK, section1_rect)
-        y_offset = 10
-        messages = get_display_message()
-        for message in messages:
-            text_surface = FONT.render(message, True, WHITE)
+        y_offset = 370
+        for topic, message in data_dict.items():
+            text_surface = FONT.render(f"{topic}: {message}", True, WHITE)
             screen.blit(text_surface, (10, y_offset))
-            y_offset += 30
+            y_offset += 40
 
-        # Section 2: Side View of STS Crane (Light Blue Background)
-        section2_rect = pygame.Rect(WIDTH // 3, 0, WIDTH // 3, HEIGHT)
-        pygame.draw.rect(screen, LIGHT_BLUE, section2_rect)
-        draw_sts_crane_side_view(screen, WIDTH // 3 + 50, HEIGHT // 2 - 200)
-
-        # Section 3: Rear View of STS Crane (Light Blue Background)
-        section3_rect = pygame.Rect(2 * WIDTH // 3, 0, WIDTH // 3, HEIGHT)
-        pygame.draw.rect(screen, LIGHT_BLUE, section3_rect)
-        draw_sts_crane_rear_view(screen, 2 * WIDTH // 3 + 50, HEIGHT // 2 - 100)
-
+        # Update the display
         pygame.display.flip()
+
+        # Set frame rate
         clock.tick(30)
 
 except KeyboardInterrupt:
     print("Exiting...")
+
 finally:
     client.loop_stop()
     client.disconnect()
