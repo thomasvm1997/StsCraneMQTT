@@ -1,41 +1,40 @@
-﻿using HiveMQtt.Client.Events;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Models.CustomEventArgs;
+using Wpe.SharkCrane.Core.Services.GantryService.GantryRoute;
+using Wpe.SharkCrane.Core.Services.GantryService.Interfaces;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
-using Wpe.SharkCrane.Core.Services.HoistService.HoistRoute;
-using Wpe.SharkCrane.Core.Services.SpreaderService.Interfaces;
 using Wpe.SharkCrane.Core.Services.SpreaderService.SpreaderRoute;
 
-namespace Wpe.SharkCrane.Core.Services.SpreaderService
+namespace Wpe.SharkCrane.Core.Services.GantryService
 {
-    public class SpreaderService : ISpreaderService
+    public class GantryService : IGantryService
     {
-        public Spreader MainSpreader { get;}
+        public Gantry MainGantry { get; }
         private readonly IHiveMQService _hiveMQService;
         private string publishTopic;
-        public SpreaderService(IHiveMQService hiveMQService)
+        public GantryService(IHiveMQService hiveMQService)
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            MainSpreader = new Spreader { IsLocked = false, Width = 5d};
+            MainGantry = new Gantry { Distance = 4d };
         }
 
         private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
         {
+
             Console.WriteLine($"HoistService received message on topic {e.Topic} : {e.Payload}");
 
-            Spreader spreaderMessage = JsonSerializer.Deserialize<Spreader>(e.Payload);
+            Gantry gantryMessage = JsonSerializer.Deserialize<Gantry>(e.Payload);
 
-            BaseResultModel result = ChangeMainProperties(spreaderMessage, e.Topic);
+            BaseResultModel result = ChangeMainProperties(gantryMessage, e.Topic);
 
-            string mainsString = JsonSerializer.Serialize(MainSpreader);
+            string mainsString = JsonSerializer.Serialize(MainGantry);
 
 
             if (result.IsSuccess == true)
@@ -48,34 +47,32 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
             }
 
         }
-
-        public BaseResultModel ChangeMainProperties(Spreader spreaderMessage, string topic)
+        public BaseResultModel ChangeMainProperties(Gantry gantryMessage, string topic)
         {
-            if (spreaderMessage != null)
+            if (gantryMessage != null)
             {
 
                 switch (topic)
                 {
 
-                    case SpreaderRoutes.SubscribeOpen:
-                        MainSpreader.Width += spreaderMessage.Increment;
-                        publishTopic = SpreaderRoutes.PublishOpen;
+                    case GantryRoutes.SubscribeRight:
+                        MainGantry.Distance += gantryMessage.Increment;
+                        publishTopic = GantryRoutes.PublishRight;
                         return new BaseResultModel { IsSuccess = true };
 
-
-                    case SpreaderRoutes.SubscribeClose:
-                        MainSpreader.Width -= spreaderMessage.Increment;
-                        publishTopic = SpreaderRoutes.PublishClose;
-                        return new BaseResultModel { IsSuccess = true };
-                    
-                    case SpreaderRoutes.SubscribeLock:
-                        MainSpreader.IsLocked = spreaderMessage.IsLocked;
-                        publishTopic = SpreaderRoutes.PublishLock;
+                    case GantryRoutes.SubscribeLeft:
+                        MainGantry.Distance -= gantryMessage.Increment;
+                        publishTopic = GantryRoutes.PublishLeft;
                         return new BaseResultModel { IsSuccess = true };
 
-                    case SpreaderRoutes.SubscribeUnlock:
-                        MainSpreader.IsLocked = spreaderMessage.IsLocked;
-                        publishTopic = SpreaderRoutes.PublishUnlock;
+                    case GantryRoutes.SubscribeLock:
+                        MainGantry.IsHandBrakeOn = gantryMessage.IsHandBrakeOn;
+                        publishTopic = GantryRoutes.SubscribeLock;
+                        return new BaseResultModel { IsSuccess = true };
+
+                    case GantryRoutes.SubscribeRelease:
+                        MainGantry.IsHandBrakeOn = gantryMessage.IsHandBrakeOn;
+                        publishTopic = GantryRoutes.PublishRelease;
                         return new BaseResultModel { IsSuccess = true };
 
                     default:
@@ -89,6 +86,5 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
                 return new BaseResultModel { IsSuccess = false, Errors = list };
             }
         }
-
     }
 }
