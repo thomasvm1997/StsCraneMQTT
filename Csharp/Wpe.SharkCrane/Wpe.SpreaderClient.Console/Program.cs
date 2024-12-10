@@ -9,6 +9,7 @@ using Wpe.SharkCrane.Core.Services.HiveService;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
 using Wpe.SharkCrane.Core.Services.SpreaderService;
 using Wpe.SharkCrane.Core.Services.SpreaderService.Interfaces;
+using Wpe.SharkCrane.Core.Services.SpreaderService.SpreaderRoute;
 
 #region injections
 var serviceProvider = new ServiceCollection()
@@ -23,17 +24,19 @@ await hiveClient.ConnectAsync();
 
 Console.WriteLine("Hello, World!");
 
-await hiveClient.SubscribeAsync("/hub/spreader");
+await hiveClient.SubscribeServiceAsync(SpreaderRoutes.BaseSubscribeWildcard);
 
 
-var spreader = new Spreader { IsLocked = true, Width = 1d };
+var spreader = new Spreader { IsLocked = true, Increment = 1d };
 var spreaderString = JsonSerializer.Serialize(spreader); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
 while(true)
 {
     Console.WriteLine("listening");
     
-    await hiveClient.PublishAsync("/hub/spreader", spreaderString); //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
-                                                                    //We doen alsof we een message krijgen.
+     //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+    await hiveClient.PublishServiceAsync("/hub/spreader/lock", spreaderString);       
+    await hiveClient.PublishServiceAsync("/hub/spreader/open", spreaderString);       
+    //We doen alsof we een message krijgen.
     await Task.Delay(1000);
 
 }

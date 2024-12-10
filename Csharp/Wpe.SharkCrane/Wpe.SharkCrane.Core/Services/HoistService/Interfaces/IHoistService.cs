@@ -7,9 +7,9 @@ using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Models.CustomEventArgs;
 using Wpe.SharkCrane.Core.Services.BaseService.Interfaces;
 
-namespace Wpe.SharkCrane.Core.Services.SpreaderService.Interfaces
+namespace Wpe.SharkCrane.Core.Services.HoistService.Interfaces
 {
-    public interface ISpreaderService : IBaseCraneService<Spreader>
+    public interface IHoistService : IBaseCraneService<Hoist>
     {
         
     }
