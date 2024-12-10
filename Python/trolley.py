@@ -1,147 +1,68 @@
+import time
 import json
 import paho.mqtt.client as paho
 from paho import mqtt
-import pygame
-from pygame.locals import *
+from trolley_object import Trolley
 
-# Initialize Pygame
-pygame.init()
+trolley = Trolley(x=100, y=300, width=50, height=20, min_x=50, max_x=750)
 
-# Screen dimensions and setup
-WIDTH, HEIGHT = 1200, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("MQTT Data Viewer with Crane Views")
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GRAY = (50, 50, 50)
-LIGHT_BLUE = (173, 216, 230)  # Light blue color
-FONT = pygame.font.Font(None, 24)
-
-# State variables
-handbrake_locked = None
-spreader_locked = None
-emergency_button_pressed = None
-
-# MQTT Topics
-topics = [
-    "/hub/gantry/handbrake/lock",
-    "/hub/gantry/handbrake/release",
-    "/hub/spreader/lock",
-    "/hub/spreader/unlock",
-    "/hub/emergency/button/press",
-    "/hub/emergency/button/release",
-]
-
-# Callback for connection
+# setting callbacks for different events to see if it works, print the message etc.
 def on_connect(client, userdata, flags, rc, properties=None):
-    if rc == 0:
-        print("Client connected successfully to broker.")
-        for topic in topics:
-            client.subscribe(topic, qos=1)
-        print("Client subscribed to all topics.")
-    else:
-        print(f"Failed to connect, return code {rc}")
+    print("CONNACK received with code %s." % rc)
+    client.subscribe("/hub/trolley", qos=1)
+    print("Subscribed to hub/trolley")
 
-# Callback for receiving messages
+# with this callback you can see if your publish was successful
+def on_publish(client, userdata, mid, properties=None):
+    print("mid: " + str(mid))
+
+# print which topic was subscribed to
+def on_subscribe(client, userdata, mid, granted_qos, properties=None):
+    print("Subscribed: " + str(mid) + " " + str(granted_qos))
+
+# print message, useful for checking if it was successful
 def on_message(client, userdata, msg):
-    global handbrake_locked, spreader_locked, emergency_button_pressed
-
-    payload = msg.payload.decode('utf-8')
-    print(f"Client received message - Topic: {msg.topic}, Payload: {payload}")
+    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload)) #message content
     try:
-        payload_data = json.loads(payload)
-        value = payload_data.get("value", "")
+        payload = json.loads(msg.payload.decode()) 
+        if msg.topic == "/hub/trolley":
+            if "command" in payload:
+                command = payload["command"]
+                if command == "move":
+                    direction = int(payload["direction"]) #-1 left, 1 right
+                    delta_time = time.time() - trolley.last_update #calculates time elapsed since last update
+                    trolley.move(direction, delta_time) #update position
+                elif command == "speed":
+                    trolley.set_speed(float(payload["speed"])) #sets speed
+                elif command == "stop":
+                    trolley.emergency_stop_action() #activates emergency stop
+                elif command == "release_stop":
+                    trolley.release_emergency_stop() #release emergency stop
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"Error parsing message: {e}")
 
-        # Update state based on the topic
-        if msg.topic == "/hub/gantry/handbrake/lock":
-            handbrake_locked = True
-        elif msg.topic == "/hub/gantry/handbrake/release":
-            handbrake_locked = False
-        elif msg.topic == "/hub/spreader/lock":
-            spreader_locked = True
-        elif msg.topic == "/hub/spreader/unlock":
-            spreader_locked = False
-        elif msg.topic == "/hub/emergency/button/press":
-            emergency_button_pressed = True
-        elif msg.topic == "/hub/emergency/button/release":
-            emergency_button_pressed = False
-
-    except json.JSONDecodeError:
-        print(f"Invalid JSON payload received on topic {msg.topic}")
-
-# Display message customization
-def get_display_message():
-    """Generate display messages for the state variables."""
-    messages = []
-    if handbrake_locked is not None:
-        messages.append(f"Handbrake: {'Locked' if handbrake_locked else 'Unlocked'}")
-    if spreader_locked is not None:
-        messages.append(f"Spreader: {'Locked' if spreader_locked else 'Unlocked'}")
-    if emergency_button_pressed is not None:
-        messages.append(f"Emergency Button: {'Pressed' if emergency_button_pressed else 'Released'}")
-    return messages
-
-# Draw STS Crane (placeholder graphics)
-def draw_sts_crane_side_view(surface, x, y):
-    pygame.draw.rect(surface, GRAY, (x, y, 200, 400))  # Crane base
-    pygame.draw.line(surface, WHITE, (x+100, y), (x+100, y-100), 3)  # Hoist
-
-def draw_sts_crane_rear_view(surface, x, y):
-    pygame.draw.rect(surface, GRAY, (x, y, 400, 200))  # Rear crane base
-    pygame.draw.line(surface, WHITE, (x+200, y), (x+200, y-100), 3)  # Hoist
-
-# Initialize the MQTT client
+# using MQTT version 5 here, for 3.1.1: MQTTv311, 3.1: MQTTv31
+# userdata is user defined data of any type, updated by user_data_set()
+# client_id is the given name of the client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
 client.on_connect = on_connect
-client.on_message = on_message
-client.tls_set(tls_version=paho.ssl.PROTOCOL_TLS)
+
+# enable TLS for secure connection
+client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+# set username and password
 client.username_pw_set("shark", "FishFish1")
+# connect to HiveMQ Cloud on port 8883 (default for MQTT)
 client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
-client.loop_start()
 
-# Main loop
-running = True
-clock = pygame.time.Clock()
+# setting callbacks, use separate functions like above for better visibility
+client.on_subscribe = on_subscribe
+client.on_message = on_message
+client.on_publish = on_publish
 
-try:
-    while running:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                running = False
 
-        screen.fill(BLACK)
+# a single publish, this can also be done in loops, etc.
+client.publish("/trolley", payload= "hot", qos=1)
 
-        # Section 1: Display State Data
-        section1_rect = pygame.Rect(0, 0, WIDTH // 4, HEIGHT)  # Smaller data display
-        pygame.draw.rect(screen, BLACK, section1_rect)
-        y_offset = 10
-        messages = get_display_message()
-        for message in messages:
-            text_surface = FONT.render(message, True, WHITE)
-            screen.blit(text_surface, (10, y_offset))
-            y_offset += 30
-
-        # Section 2: Side View of STS Crane (Light Blue Background)
-        section2_rect = pygame.Rect(WIDTH // 4, 0, (WIDTH // 4) * 2, HEIGHT)
-        pygame.draw.rect(screen, LIGHT_BLUE, section2_rect)
-        draw_sts_crane_side_view(screen, WIDTH // 4 + 50, HEIGHT // 2 - 200)
-
-        # Split line between the crane views
-        pygame.draw.line(screen, BLACK, (WIDTH // 2, 0), (WIDTH // 2, HEIGHT), 2)
-
-        # Section 3: Rear View of STS Crane (Light Blue Background)
-        section3_rect = pygame.Rect((WIDTH // 4) * 3, 0, WIDTH // 4, HEIGHT)
-        pygame.draw.rect(screen, LIGHT_BLUE, section3_rect)
-        draw_sts_crane_rear_view(screen, (WIDTH // 4) * 3 + 50, HEIGHT // 2 - 100)
-
-        pygame.display.flip()
-        clock.tick(30)
-
-except KeyboardInterrupt:
-    print("Exiting...")
-finally:
-    client.loop_stop()
-    client.disconnect()
-    pygame.quit()
+# loop_forever for simplicity, here you need to stop the loop manually
+# you can also use loop_start and loop_stop
+client.loop_forever()
