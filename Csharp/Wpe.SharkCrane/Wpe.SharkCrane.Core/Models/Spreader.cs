@@ -14,9 +14,13 @@ namespace Wpe.SharkCrane.Core.Models
             get {  return width; }
             set
             {
-                if(value >= 12.5d)
+                if(value >= 14)
                 {
-                    width = 12.5d;
+                    width = 14;
+                }
+                else if(value <= 0)
+                {
+                    width = 0;
                 }
                 else {
                 width = value;

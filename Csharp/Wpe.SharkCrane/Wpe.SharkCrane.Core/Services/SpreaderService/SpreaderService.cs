@@ -20,6 +20,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
         public Spreader MainSpreader { get;}
         private readonly IHiveMQService _hiveMQService;
         private string publishTopic;
+
         public SpreaderService(IHiveMQService hiveMQService)
         {
             _hiveMQService = hiveMQService;
@@ -32,7 +33,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
             Console.WriteLine($"HoistService received message on topic {e.Topic} : {e.Payload}");
 
             Spreader spreaderMessage = JsonSerializer.Deserialize<Spreader>(e.Payload);
-
+ 
             BaseResultModel result = ChangeMainProperties(spreaderMessage, e.Topic);
 
             string mainsString = JsonSerializer.Serialize(MainSpreader);
@@ -59,13 +60,13 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
 
                     case SpreaderRoutes.SubscribeOpen:
                         MainSpreader.Width += spreaderMessage.Increment;
-                        publishTopic = SpreaderRoutes.PublishOpen;
+                        publishTopic = SpreaderRoutes.PublishWidth;
                         return new BaseResultModel { IsSuccess = true };
 
 
                     case SpreaderRoutes.SubscribeClose:
                         MainSpreader.Width -= spreaderMessage.Increment;
-                        publishTopic = SpreaderRoutes.PublishClose;
+                        publishTopic = SpreaderRoutes.PublishWidth;
                         return new BaseResultModel { IsSuccess = true };
                     
                     case SpreaderRoutes.SubscribeLock:
