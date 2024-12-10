@@ -23,7 +23,6 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             double width = 5;
             bool isLocked = false;
             
-
             // Act
             Spreader spreader = new Spreader { IsLocked = isLocked, Width = width };
 
