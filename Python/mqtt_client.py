@@ -8,8 +8,10 @@ pygame.init()
 
 # Screen dimensions
 WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("MQTT Data Viewer")
+TOP_SECTION_HEIGHT = 300
+BOTTOM_SECTION_HEIGHT = HEIGHT - TOP_SECTION_HEIGHT
+TOP_RIGHT_WIDTH = WIDTH // 2
+TOP_LEFT_WIDTH = WIDTH // 2
 
 # Colors
 WHITE = (255, 255, 255)
@@ -17,34 +19,17 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 LIGHT_BLUE = (173, 216, 230)
+
+# Font
 FONT = pygame.font.Font(None, 36)
 
-# Load assets
-sts_image = pygame.image.load("../assets/STS_side.png")
-sts_image = pygame.transform.scale(sts_image, (400, 300))
-sts_back_image = pygame.image.load("../assets/STS_back.png")
-sts_back_image = pygame.transform.scale(sts_back_image, (90, 425))
-sky_background = pygame.image.load("../assets/sky_background1.jpeg")
-sky_background = pygame.transform.scale(sky_background, (400, 300))
-ship_side = pygame.image.load("../assets/ship_side.png")
-ship_side = pygame.transform.scale(ship_side, (800, 330))  # Ensure it covers the bottom width
-ship_side = pygame.transform.flip(ship_side, True, False)
-# Initial dot positions and line height
-dot_x = 300
-dot_y = 200
-line_fixed_height = 123
-bottom_dot_x = WIDTH // 2
-bottom_dot_y = HEIGHT - 100
+# Dot sizes
+DOT_RADIUS = 5
+LINE_THICKNESS = 2
+LINE_FIXED_HEIGHT = 123
 
-# Movement states
-handbrake_locked = False
-spreader_locked = False
-
-# Data dictionary for MQTT messages
-data_dict = {}
-
-# Topics to subscribe to
-topics = [
+# MQTT topics
+MQTT_TOPICS = [
     "/hub/gantry/handbrake/lock",
     "/hub/gantry/handbrake/release",
     "/hub/gantry/location",
@@ -53,23 +38,54 @@ topics = [
     "/hub/spreader/widen",
     "/hub/spreader/narrow",
     "/hub/spreader/lock",
-    "/hub/spreader/unlock"
+    "/hub/spreader/unlock",
 ]
+
+# Screen setup
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("MQTT Data Viewer")
+
+# Load and transform assets
+STS_IMAGE = pygame.image.load("../assets/STS_side.png")
+STS_IMAGE = pygame.transform.scale(STS_IMAGE, (TOP_LEFT_WIDTH, TOP_SECTION_HEIGHT))
+
+STS_BACK_IMAGE = pygame.image.load("../assets/STS_back.png")
+STS_BACK_IMAGE = pygame.transform.scale(STS_BACK_IMAGE, (90, 425))
+
+SKY_BACKGROUND = pygame.image.load("../assets/sky_background1.jpeg")
+SKY_BACKGROUND = pygame.transform.scale(SKY_BACKGROUND, (WIDTH, BOTTOM_SECTION_HEIGHT))  # Covers the full bottom width
+
+SHIP_IMAGE = pygame.image.load("../assets/ship_side.png")
+SHIP_IMAGE = pygame.transform.scale(SHIP_IMAGE, (WIDTH, BOTTOM_SECTION_HEIGHT))  # Covers the full bottom width
+SHIP_IMAGE = pygame.transform.flip(SHIP_IMAGE, True, False)
+
+# Initial dot positions
+DOT_X = 300
+DOT_Y = 200
+BOTTOM_DOT_X = WIDTH // 2
+BOTTOM_DOT_Y = HEIGHT - 100
+
+# States
+handbrake_locked = False
+spreader_locked = False
+
+# Data dictionary for MQTT messages
+data_dict = {}
 
 # MQTT callback functions
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print("Connected to broker.")
-        for topic in topics:
+        for topic in MQTT_TOPICS:
             client.subscribe(topic, qos=1)
         print("Subscribed to all topics.")
     else:
         print(f"Failed to connect, return code {rc}")
 
 def on_message(client, userdata, msg):
-    global dot_x, bottom_dot_x, dot_y, bottom_dot_y, handbrake_locked, spreader_locked
+    global DOT_X, BOTTOM_DOT_X, DOT_Y, BOTTOM_DOT_Y, handbrake_locked, spreader_locked
     try:
-        payload = msg.payload.decode('utf-8')
+        payload = msg.payload.decode("utf-8")
         json_object = json.loads(payload)
         data_dict[msg.topic] = json_object
 
@@ -79,20 +95,20 @@ def on_message(client, userdata, msg):
         elif msg.topic == "/hub/gantry/handbrake/release":
             handbrake_locked = False
         elif msg.topic == "/hub/gantry/location" and not handbrake_locked:
-            bottom_dot_x = json_object.get("x", bottom_dot_x)
+            BOTTOM_DOT_X = json_object.get("x", BOTTOM_DOT_X)
         elif msg.topic == "/hub/hoist/location":
-            new_y = json_object.get("y", bottom_dot_y)
-            bottom_dot_y = new_y
-            dot_y = new_y
+            new_y = json_object.get("y", BOTTOM_DOT_Y)
+            BOTTOM_DOT_Y = new_y
+            DOT_Y = new_y
         elif msg.topic == "/hub/trolley/location":
-            dot_x = json_object.get("x", dot_x)
+            DOT_X = json_object.get("x", DOT_X)
         elif msg.topic == "/hub/spreader/lock":
             spreader_locked = True
         elif msg.topic == "/hub/spreader/unlock":
             spreader_locked = False
 
     except json.JSONDecodeError:
-        data_dict[msg.topic] = msg.payload.decode('utf-8')
+        data_dict[msg.topic] = msg.payload.decode("utf-8")
 
 # MQTT setup
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
@@ -116,32 +132,41 @@ try:
         # Clear screen
         screen.fill(LIGHT_BLUE)
 
-        # Top section background
-        screen.blit(sky_background, (0, 0))
-        screen.blit(sts_image, (0, 0))
-        pygame.draw.rect(screen, WHITE, (0, 0, 400, 300), 2)
+        # --- TOP LEFT SECTION ---
+        screen.blit(SKY_BACKGROUND, (0, 0))
+        screen.blit(STS_IMAGE, (0, 0))
+        pygame.draw.rect(screen, WHITE, (0, 0, TOP_LEFT_WIDTH, TOP_SECTION_HEIGHT), 2)
 
-        # Top section dots and lines
-        pygame.draw.circle(screen, GREEN if spreader_locked else RED, (dot_x, dot_y), 5)
-        pygame.draw.line(screen, BLACK, (dot_x, dot_y), (dot_x, line_fixed_height), 2)
-        pygame.draw.rect(screen, BLACK, (400, 0, 400, 300))
+        # Dots and lines for top-left
+        pygame.draw.circle(screen, GREEN if spreader_locked else RED, (DOT_X, DOT_Y), DOT_RADIUS)
+        pygame.draw.line(screen, BLACK, (DOT_X, DOT_Y), (DOT_X, LINE_FIXED_HEIGHT), LINE_THICKNESS)
+
+        # --- TOP RIGHT SECTION ---
+        pygame.draw.rect(screen, BLACK, (TOP_LEFT_WIDTH, 0, TOP_RIGHT_WIDTH, TOP_SECTION_HEIGHT))
         y_offset = 10
         for topic, message in data_dict.items():
             text_surface = FONT.render(f"{topic}: {message}", True, WHITE)
-            screen.blit(text_surface, (410, y_offset))
+            screen.blit(text_surface, (TOP_LEFT_WIDTH + 10, y_offset))
             y_offset += 40
 
-        # Bottom section background
-        screen.blit(ship_side, (0, 300))  # Place the ship image at the start of the bottom screen
-        pygame.draw.rect(screen, WHITE, (0, 300, WIDTH, HEIGHT - 300), 2)
+        # --- BOTTOM SECTION ---
+        # Step 1: Render the sky background first
+        screen.blit(SKY_BACKGROUND, (0, TOP_SECTION_HEIGHT))  # Start from the top section height
 
-        # Bottom section dots and lines
-        pygame.draw.circle(screen, RED, (bottom_dot_x, bottom_dot_y), 5)
-        pygame.draw.line(screen, BLACK, (bottom_dot_x, bottom_dot_y), (bottom_dot_x, 400), 2)
-        back_image_x = (WIDTH - sts_back_image.get_width()) // 2
-        back_image_y = 300 + (HEIGHT - 300 - sts_back_image.get_height()) // 2 - 47
-        screen.blit(sts_back_image, (back_image_x, back_image_y))
-        pygame.draw.rect(screen, BLACK, (0, HEIGHT - 30, WIDTH, 30))
+        # Step 2: Render the ship image on top of the sky background
+        screen.blit(SHIP_IMAGE, (0, TOP_SECTION_HEIGHT))  # Ensure the ship image is positioned correctly
+
+        # Step 3: Render the crane image (STS_BACK_IMAGE) over the ship image
+        back_image_x = (WIDTH - STS_BACK_IMAGE.get_width()) // 2
+        back_image_y = TOP_SECTION_HEIGHT + (BOTTOM_SECTION_HEIGHT - STS_BACK_IMAGE.get_height()) // 2 - 47
+        screen.blit(STS_BACK_IMAGE, (back_image_x, back_image_y))
+
+        # Step 4: Draw the black rectangle at the bottom
+        pygame.draw.rect(screen, BLACK, (0, HEIGHT - 30, WIDTH, 30))  # A rectangle covering the bottom 30px
+
+        # Dots and lines for bottom section
+        pygame.draw.circle(screen, RED, (BOTTOM_DOT_X, BOTTOM_DOT_Y), DOT_RADIUS)
+        pygame.draw.line(screen, BLACK, (BOTTOM_DOT_X, BOTTOM_DOT_Y), (BOTTOM_DOT_X, TOP_SECTION_HEIGHT + 100), LINE_THICKNESS)
 
         pygame.display.flip()
         clock.tick(30)
