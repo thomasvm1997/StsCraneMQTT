@@ -1,10 +1,8 @@
-import time
 import json
 import paho.mqtt.client as paho
 from paho import mqtt
 import pygame
 from pygame.locals import *
-from threading import Thread
 
 # Initialize Pygame
 pygame.init()
@@ -21,20 +19,19 @@ GRAY = (50, 50, 50)
 LIGHT_BLUE = (173, 216, 230)  # Light blue color
 FONT = pygame.font.Font(None, 24)
 
-# Dictionary to store incoming data for display
-data_dict = {}
+# State variables
+handbrake_locked = None
+spreader_locked = None
+emergency_button_pressed = None
 
 # MQTT Topics
 topics = [
     "/hub/gantry/handbrake/lock",
     "/hub/gantry/handbrake/release",
-    "/hub/gantry/location",
-    "/hub/hoist/location",
-    "/hub/trolley/location",
-    "/hub/spreader/widen",
-    "/hub/spreader/narrow",
     "/hub/spreader/lock",
-    "/hub/spreader/unlock"
+    "/hub/spreader/unlock",
+    "/hub/emergency/button/press",
+    "/hub/emergency/button/release",
 ]
 
 # Callback for connection
@@ -49,64 +46,42 @@ def on_connect(client, userdata, flags, rc, properties=None):
 
 # Callback for receiving messages
 def on_message(client, userdata, msg):
-    print(f"Client received message - Topic: {msg.topic}, Payload: {msg.payload.decode('utf-8')}")
-    try:
-        payload = msg.payload.decode('utf-8')
-        json_object = json.loads(payload)
-        data_dict[msg.topic] = json_object
-    except json.JSONDecodeError:
-        data_dict[msg.topic] = msg.payload.decode('utf-8')
+    global handbrake_locked, spreader_locked, emergency_button_pressed
 
-# Mock data generator
-def mock_data_generator():
-    mock_values = {
-        "/hub/gantry/handbrake/lock": "Locked",
-        "/hub/gantry/handbrake/release": "Released",
-        "/hub/gantry/location": "East Section",
-        "/hub/hoist/location": "Top",
-        "/hub/trolley/location": "Middle",
-        "/hub/spreader/widen": "Widening",
-        "/hub/spreader/narrow": "Narrowing",
-        "/hub/spreader/lock": "Locked",
-        "/hub/spreader/unlock": "Unlocked"
-    }
-    while True:
-        for topic, value in mock_values.items():
-            mock_message = json.dumps({"value": value, "timestamp": time.time()})
-            on_message(client, None, type("MQTTMessage", (), {"topic": topic, "payload": mock_message.encode('utf-8')}))
-            time.sleep(0.5)
-
-# Display message customization
-def get_display_message(topic, payload):
-    """Generate user-friendly display messages based on topic and payload."""
+    payload = msg.payload.decode('utf-8')
+    print(f"Client received message - Topic: {msg.topic}, Payload: {payload}")
     try:
         payload_data = json.loads(payload)
         value = payload_data.get("value", "")
-        
-        # Define custom messages for specific topics
-        if topic == "/hub/gantry/handbrake/lock" and value == "Locked":
-            return "Handbrake Locked"
-        elif topic == "/hub/gantry/handbrake/release" and value == "Released":
-            return "Handbrake Released"
-        elif topic == "/hub/gantry/location":
-            return f"Gantry Location: {value}"
-        elif topic == "/hub/hoist/location":
-            return f"Hoist Location: {value}"
-        elif topic == "/hub/trolley/location":
-            return f"Trolley Location: {value}"
-        elif topic == "/hub/spreader/widen":
-            return "Spreader Widening"
-        elif topic == "/hub/spreader/narrow":
-            return "Spreader Narrowing"
-        elif topic == "/hub/spreader/lock":
-            return "Spreader Locked"
-        elif topic == "/hub/spreader/unlock":
-            return "Spreader Unlocked"
-        else:
-            return f"{topic}: {value}"  # Default fallback
+
+        # Update state based on the topic
+        if msg.topic == "/hub/gantry/handbrake/lock":
+            handbrake_locked = True
+        elif msg.topic == "/hub/gantry/handbrake/release":
+            handbrake_locked = False
+        elif msg.topic == "/hub/spreader/lock":
+            spreader_locked = True
+        elif msg.topic == "/hub/spreader/unlock":
+            spreader_locked = False
+        elif msg.topic == "/hub/emergency/button/press":
+            emergency_button_pressed = True
+        elif msg.topic == "/hub/emergency/button/release":
+            emergency_button_pressed = False
 
     except json.JSONDecodeError:
-        return f"{topic}: {payload}"
+        print(f"Invalid JSON payload received on topic {msg.topic}")
+
+# Display message customization
+def get_display_message():
+    """Generate display messages for the state variables."""
+    messages = []
+    if handbrake_locked is not None:
+        messages.append(f"Handbrake: {'Locked' if handbrake_locked else 'Unlocked'}")
+    if spreader_locked is not None:
+        messages.append(f"Spreader: {'Locked' if spreader_locked else 'Unlocked'}")
+    if emergency_button_pressed is not None:
+        messages.append(f"Emergency Button: {'Pressed' if emergency_button_pressed else 'Released'}")
+    return messages
 
 # Draw STS Crane (placeholder graphics)
 def draw_sts_crane_side_view(surface, x, y):
@@ -126,10 +101,6 @@ client.username_pw_set("shark", "FishFish1")
 client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 client.loop_start()
 
-# Start mock data generation
-mock_thread = Thread(target=mock_data_generator, daemon=True)
-mock_thread.start()
-
 # Main loop
 running = True
 clock = pygame.time.Clock()
@@ -142,13 +113,13 @@ try:
 
         screen.fill(BLACK)
 
-        # Section 1: MQTT Data
+        # Section 1: Display State Data
         section1_rect = pygame.Rect(0, 0, WIDTH // 3, HEIGHT)
         pygame.draw.rect(screen, BLACK, section1_rect)
         y_offset = 10
-        for topic, message in data_dict.items():
-            display_message = get_display_message(topic, json.dumps(message))
-            text_surface = FONT.render(display_message, True, WHITE)
+        messages = get_display_message()
+        for message in messages:
+            text_surface = FONT.render(message, True, WHITE)
             screen.blit(text_surface, (10, y_offset))
             y_offset += 30
 
