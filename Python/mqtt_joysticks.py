@@ -3,21 +3,30 @@ import paho.mqtt.client as paho
 from paho import mqtt
 import keyboard
 
+# Topics for joystick actions
 JOYSTICK_TOPICS = {
     "gantry_left": "/joysticks/gantry/left",
     "gantry_right": "/joysticks/gantry/right",
-    "gantry_handbrake_lock": "/joysticks/gantry/handbrake/lock",
-    "gantry_handbrake_release": "/joysticks/gantry/handbrake/release",
+    "gantry_neutral": "/joysticks/gantry/neutral",
     "hoist_up": "/joysticks/hoist/up",
     "hoist_down": "/joysticks/hoist/down",
+    "hoist_neutral": "/joysticks/hoist/neutral",
     "trolley_forward": "/joysticks/trolley/forward",
     "trolley_backward": "/joysticks/trolley/backward",
-    "spreader_widen": "/joysticks/spreader/widen",
-    "spreader_narrow": "/joysticks/spreader/narrow",
-    "spreader_lock": "/joysticks/spreader/lock",
-    "spreader_unlock": "/joysticks/spreader/unlock",
+    "trolley_neutral": "/joysticks/trolley/neutral",
+    "handbrake_lock": "/joysticks/gantry/handbrake/lock",
+    "handbrake_release": "/joysticks/gantry/handbrake/release",
     "emergency_lock": "/joysticks/emergency/lock",
-    "emergency_unlock": "/joysticks/emergency/unlock"
+    "emergency_unlock": "/joysticks/emergency/unlock",
+}
+
+# State tracking
+last_action = {
+    "gantry": None,
+    "hoist": None,
+    "trolley": None,
+    "handbrake": None,
+    "emergency": None
 }
 
 # Callback for connection
@@ -31,103 +40,61 @@ def on_connect(client, userdata, flags, rc, properties=None):
 def on_publish(client, userdata, mid, properties=None):
     print(f"Message published successfully - MID: {mid}")
 
-# Main function to handle joystick key presses and send MQTT messages
-def joystick_controller(client):
-    print("Joystick control activated. Press 'q' to quit.")
-    try:
-        while True:
-            if keyboard.is_pressed('q'):
-                print("Exiting joystick control...")
-                break
+# Function to send joystick states
+def send_joystick_states(client):
+    global last_action
 
-            # Gantry actions
-            if keyboard.is_pressed('a'):  # Gantry move left
-                client.publish(JOYSTICK_TOPICS["gantry_left"], "gantry left", qos=1)
-                print("Gantry left")
-                time.sleep(1)
-            elif keyboard.is_pressed('d'):  # Gantry move right
-                client.publish(JOYSTICK_TOPICS["gantry_right"], "gantry right", qos=1)
-                print("Gantry right")
-                time.sleep(1)
-            elif keyboard.is_pressed('1'):  # Gantry handbrake lock
-                client.publish(JOYSTICK_TOPICS["gantry_handbrake_lock"], "handbrake lock", qos=1)
-                print("Gantry handbrake lock")
-                time.sleep(1)
-            elif keyboard.is_pressed('2'):  # Gantry handbrake release
-                client.publish(JOYSTICK_TOPICS["gantry_handbrake_release"], "handbrake release", qos=1)
-                print("Gantry handbrake release")
-                time.sleep(1)
+    # Default all states to neutral
+    joystick_states = {
+        "gantry": "neutral",
+        "hoist": "neutral",
+        "trolley": "neutral",
+        "handbrake": "release",
+        "emergency": "unlock"
+    }
 
-            # Hoist actions
-            if keyboard.is_pressed('w'):  # Hoist up
-                client.publish(JOYSTICK_TOPICS["hoist_up"], "hoist up", qos=1)
-                print("Hoist up")
-                time.sleep(1)
-            elif keyboard.is_pressed('s'):  # Hoist down
-                client.publish(JOYSTICK_TOPICS["hoist_down"], "hoist down", qos=1)
-                print("Hoist down")
-                time.sleep(1)
+    # Check joystick button states
+    if keyboard.is_pressed('a'):
+        joystick_states["gantry"] = "left"
+    elif keyboard.is_pressed('d'):
+        joystick_states["gantry"] = "right"
 
-            # Trolley actions
-            if keyboard.is_pressed('i'):  # Trolley forward
-                client.publish(JOYSTICK_TOPICS["trolley_forward"], "trolley forward", qos=1)
-                print("Trolley forward")
-                time.sleep(1)
-            elif keyboard.is_pressed('k'):  # Trolley backward
-                client.publish(JOYSTICK_TOPICS["trolley_backward"], "trolley backward", qos=1)
-                print("Trolley backward")
-                time.sleep(1)
+    if keyboard.is_pressed('w'):
+        joystick_states["hoist"] = "up"
+    elif keyboard.is_pressed('s'):
+        joystick_states["hoist"] = "down"
 
-            # Spreader actions
-            if keyboard.is_pressed('o'):  # Spreader widen
-                client.publish(JOYSTICK_TOPICS["spreader_widen"], "spreader widen", qos=1)
-                print("Spreader widen")
-                time.sleep(1)
-            elif keyboard.is_pressed('l'):  # Spreader narrow
-                client.publish(JOYSTICK_TOPICS["spreader_narrow"], "spreader narrow", qos=1)
-                print("Spreader narrow")
-                time.sleep(1)
-            elif keyboard.is_pressed('p'):  # Spreader lock
-                client.publish(JOYSTICK_TOPICS["spreader_lock"], "spreader lock", qos=1)
-                print("Spreader lock")
-                time.sleep(1)
-            elif keyboard.is_pressed(';'):  # Spreader unlock
-                client.publish(JOYSTICK_TOPICS["spreader_unlock"], "spreader unlock", qos=1)
-                print("Spreader unlock")
-                time.sleep(1)
+    if keyboard.is_pressed('i'):
+        joystick_states["trolley"] = "forward"
+    elif keyboard.is_pressed('k'):
+        joystick_states["trolley"] = "backward"
 
-            # Emergency actions
-            if keyboard.is_pressed('z'):  # Emergency lock
-                client.publish(JOYSTICK_TOPICS["emergency_lock"], "emergency lock", qos=1)
-                print("Emergency lock")
-                time.sleep(1)
-            elif keyboard.is_pressed('x'):  # Emergency unlock
-                client.publish(JOYSTICK_TOPICS["emergency_unlock"], "emergency unlock", qos=1)
-                print("Emergency unlock")
-                time.sleep(1)
+    if keyboard.is_pressed('1'):
+        joystick_states["handbrake"] = "lock"
+    elif keyboard.is_pressed('2'):
+        joystick_states["handbrake"] = "release"
 
-            # Avoid high CPU usage
-            time.sleep(0.1)
+    if keyboard.is_pressed('z'):
+        joystick_states["emergency"] = "lock"
+    elif keyboard.is_pressed('x'):
+        joystick_states["emergency"] = "unlock"
 
-    except KeyboardInterrupt:
-        print("Joystick control interrupted.")
+    # Publish state changes
+    for component, state in joystick_states.items():
+        if state != last_action[component]:
+            topic = JOYSTICK_TOPICS.get(f"{component}_{state}")
+            if topic:
+                client.publish(topic, f"{component} {state}", qos=1)
+                print(f"{component.capitalize()} {state}")
+                last_action[component] = state
 
-    finally:
-        client.loop_stop()
-        client.disconnect()
-        print("MQTT client disconnected.")
-
-# Initialize the MQTT client
+# Initialize MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
-
-# Set MQTT callbacks
 client.on_connect = on_connect
 client.on_publish = on_publish
 
 # Enable TLS for secure MQTT connection
 client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
-
-# Set MQTT username and password
 client.username_pw_set("shark", "FishFish1")
 
 # Connect to the HiveMQ broker
@@ -136,4 +103,17 @@ client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 # Start the MQTT client loop in the background
 client.loop_start()
 
-joystick_controller(client)
+try:
+    print("Joystick control activated. Press 'q' to quit.")
+    while True:
+        send_joystick_states(client)
+        time.sleep(1)  # Check every second
+        if keyboard.is_pressed('q'):
+            print("Exiting joystick control...")
+            break
+except KeyboardInterrupt:
+    print("Joystick control interrupted.")
+finally:
+    client.loop_stop()
+    client.disconnect()
+    print("MQTT client disconnected.")

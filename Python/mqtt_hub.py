@@ -2,71 +2,69 @@ import time
 import json
 import paho.mqtt.client as paho
 from paho import mqtt
+from enum import Enum
+
+# Define enumerations for actions
+class GantryAction(Enum):
+    LEFT = "left"
+    RIGHT = "right"
+    NEUTRAL = "neutral"
+
+class HoistAction(Enum):
+    UP = "up"
+    DOWN = "down"
+    NEUTRAL = "neutral"
+
+class TrolleyAction(Enum):
+    FORWARD = "forward"
+    BACKWARD = "backward"
+    NEUTRAL = "neutral"
+
+class HandbrakeAction(Enum):
+    LOCK = "lock"
+    RELEASE = "release"
+
+class EmergencyAction(Enum):
+    LOCK = "lock"
+    UNLOCK = "unlock"
 
 # List of topics the Hub subscribes to
 SUBSCRIPTIONS = [
-    # Gantry
     "/joysticks/gantry/left",
     "/joysticks/gantry/right",
-    "/joysticks/gantry/handbrake/lock",
-    "/joysticks/gantry/handbrake/release",
-    "/gantry/location",
-    # Hoist
+    "/joysticks/gantry/neutral",
     "/joysticks/hoist/up",
     "/joysticks/hoist/down",
-    "/hoist/location",
-    # Trolley
+    "/joysticks/hoist/neutral",
     "/joysticks/trolley/forward",
     "/joysticks/trolley/backward",
-    "/trolley/location",
-    # Spreader
-    "/joysticks/spreader/widen",
-    "/joysticks/spreader/narrow",
-    "/joysticks/spreader/lock",
-    "/joysticks/spreader/unlock",
-    "/spreader/widen",
-    "/spreader/narrow",
-    "/spreader/lock",
-    "/spreader/unlock",
-    # Emergency Button
+    "/joysticks/trolley/neutral",
+    "/joysticks/gantry/handbrake/lock",
+    "/joysticks/gantry/handbrake/release",
     "/joysticks/emergency/lock",
-    "/joysticks/emergency/unlock"
+    "/joysticks/emergency/unlock",
 ]
 
 # Map incoming topics to their corresponding Hub publication topics
 PUBLISH_TOPICS = {
-    # Gantry
     "/joysticks/gantry/left": "/hub/gantry/left",
     "/joysticks/gantry/right": "/hub/gantry/right",
-    "/joysticks/gantry/handbrake/lock": "/hub/gantry/handbrake/lock",
-    "/joysticks/gantry/handbrake/release": "/hub/gantry/handbrake/release",
-    "/gantry/location": "/hub/gantry/location",
-    # Hoist
+    "/joysticks/gantry/neutral": "/hub/gantry/neutral",
     "/joysticks/hoist/up": "/hub/hoist/up",
     "/joysticks/hoist/down": "/hub/hoist/down",
-    "/hoist/location": "/hub/hoist/location",
-    # Trolley
+    "/joysticks/hoist/neutral": "/hub/hoist/neutral",
     "/joysticks/trolley/forward": "/hub/trolley/forward",
     "/joysticks/trolley/backward": "/hub/trolley/backward",
-    "/trolley/location": "/hub/trolley/location",
-    # Spreader
-    "/joysticks/spreader/widen": "/hub/spreader/widen",
-    "/joysticks/spreader/narrow": "/hub/spreader/narrow",
-    "/joysticks/spreader/lock": "/hub/spreader/lock",
-    "/joysticks/spreader/unlock": "/hub/spreader/unlock",
-    "/spreader/widen": "/hub/spreader/widen",
-    "/spreader/narrow": "/hub/spreader/narrow",
-    "/spreader/lock": "/hub/spreader/lock",
-    "/spreader/unlock": "/hub/spreader/unlock",
-    # Emergency Button
+    "/joysticks/trolley/neutral": "/hub/trolley/neutral",
+    "/joysticks/gantry/handbrake/lock": "/hub/gantry/handbrake/lock",
+    "/joysticks/gantry/handbrake/release": "/hub/gantry/handbrake/release",
     "/joysticks/emergency/lock": "/hub/emergency/lock",
-    "/joysticks/emergency/unlock": "/hub/emergency/unlock"
+    "/joysticks/emergency/unlock": "/hub/emergency/unlock",
 }
 
 # Callback for successful connection
 def on_connect(client, userdata, flags, rc, properties=None):
-    print("CONNACK received with code %s." % rc)
-    # Subscribe to all topics
+    print(f"CONNACK received with code {rc}.")
     for topic in SUBSCRIPTIONS:
         client.subscribe(topic, qos=1)
         print(f"Subscribed to {topic}")
@@ -82,30 +80,42 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 # Callback for receiving messages
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {msg.payload.decode('utf-8')}")
-    
+
     try:
-        # Omzetten van de payload naar een JSON-object
-        json_object = json.loads(msg.payload.decode('utf-8'))
-        print("JSON object:", json_object)
-    except json.JSONDecodeError as e:
-        print(f"Failed to decode JSON: {e}")
-        return
+        payload = msg.payload.decode("utf-8")
+        action_enum = None
 
-    # Check if the topic has a mapped publication topic
-    if msg.topic in PUBLISH_TOPICS:
-        target_topic = PUBLISH_TOPICS[msg.topic]
-        client.publish(target_topic, payload=json.dumps(json_object), qos=1)
-        print(f"Forwarded message from {msg.topic} to {target_topic} with payload: {json.dumps(json_object)}")
+        # Determine the action enum based on the topic
+        if msg.topic.startswith("/joysticks/gantry"):
+            action_enum = GantryAction(payload)
+        elif msg.topic.startswith("/joysticks/hoist"):
+            action_enum = HoistAction(payload)
+        elif msg.topic.startswith("/joysticks/trolley"):
+            action_enum = TrolleyAction(payload)
+        elif msg.topic.startswith("/joysticks/gantry/handbrake"):
+            action_enum = HandbrakeAction(payload)
+        elif msg.topic.startswith("/joysticks/emergency"):
+            action_enum = EmergencyAction(payload)
 
-    # Forward every message to /hub/client
-    client.publish("/hub/client", payload=json.dumps(json_object), qos=1)
-    print(f"Forwarded message from {msg.topic} to /hub/client with payload: {json.dumps(json_object)}")
+        # Log the action enum
+        if action_enum:
+            print(f"Processed action: {action_enum}")
 
+        # Forward to the appropriate topic
+        if msg.topic in PUBLISH_TOPICS:
+            target_topic = PUBLISH_TOPICS[msg.topic]
+            client.publish(target_topic, payload=json.dumps({"action": payload}), qos=1)
+            print(f"Forwarded to {target_topic} with payload: {payload}")
+
+        # Also forward all messages to /hub/client
+        client.publish("/hub/client", payload=json.dumps({"topic": msg.topic, "action": payload}), qos=1)
+        print(f"Forwarded to /hub/client: {msg.topic}, payload: {payload}")
+
+    except ValueError as e:
+        print(f"Invalid action or topic: {e}")
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
-
-# Set callbacks
 client.on_connect = on_connect
 client.on_publish = on_publish
 client.on_subscribe = on_subscribe
@@ -113,8 +123,6 @@ client.on_message = on_message
 
 # Enable TLS for secure connection
 client.tls_set(tls_version=paho.ssl.PROTOCOL_TLS)
-
-# Set username and password for MQTT
 client.username_pw_set("shark", "FishFish1")
 
 # Connect to HiveMQ broker
