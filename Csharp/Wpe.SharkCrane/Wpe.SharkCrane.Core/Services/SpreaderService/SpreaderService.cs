@@ -43,17 +43,15 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
             {
                 await _hiveMQService.PublishServiceAsync(publishTopic, mainsString);
             }
-            else
+            else if (String.IsNullOrEmpty(publishTopic)) //In neutraal zetten we de publishTopic op null
             {
-                if (String.IsNullOrEmpty(publishTopic))
-                {
-                    Console.Write("IN NEUTRAL MODE\n");
-                }
-                else 
-                {
-                Console.WriteLine(result.Errors.First());
-                }
+                Console.Write("IN NEUTRAL MODE\n");
             }
+            else 
+            {
+                Console.WriteLine(result.Errors.First());
+            }
+            
 
         }
 
@@ -66,7 +64,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
                 {
 
                     case SpreaderRoutes.SubscribeOpen:
-                        StorageSpreader.Increment += 0.2D;
+                        StorageSpreader.Increment += spreaderMessage.Increment;
                         StorageSpreader.Width += StorageSpreader.Increment;
                         StorageSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
                         publishTopic = SpreaderRoutes.PublishWidth;
@@ -74,7 +72,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
 
 
                     case SpreaderRoutes.SubscribeClose:
-                        StorageSpreader.Increment += 0.2D;
+                        StorageSpreader.Increment += spreaderMessage.Increment;
                         StorageSpreader.Width -= StorageSpreader.Increment;
                         StorageSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
                         publishTopic = SpreaderRoutes.PublishWidth;

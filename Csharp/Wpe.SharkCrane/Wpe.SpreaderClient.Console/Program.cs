@@ -28,9 +28,9 @@ Console.WriteLine("Hello, World!");
 await hiveClient.SubscribeServiceAsync(SpreaderRoutes.BaseSubscribeWildcard);
 
 
-var spreaderOpen = new Spreader { SpreaderMovement = SpreaderMovement.Open};
-var spreaderNeutral = new Spreader { SpreaderMovement = SpreaderMovement.Neutral};
-var spreaderClose = new Spreader {SpreaderMovement = SpreaderMovement.Close };
+var spreaderOpen = new Spreader { SpreaderMovement = SpreaderMovement.Open, Increment= 0.2d};
+var spreaderNeutral = new Spreader { SpreaderMovement = SpreaderMovement.Neutral, Increment = 0.2d }; //HUB MOET STANDAARD INCREMENT DOORGEVEN
+var spreaderClose = new Spreader {SpreaderMovement = SpreaderMovement.Close , Increment = 0.2d };
 var spreaderOpentring = JsonSerializer.Serialize(spreaderOpen); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
 var spreaderNeutralString = JsonSerializer.Serialize(spreaderNeutral); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
 var spreaderCloseString = JsonSerializer.Serialize(spreaderClose); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
