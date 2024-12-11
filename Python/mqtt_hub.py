@@ -1,32 +1,32 @@
 import time
 import json
 import paho.mqtt.client as paho
-from paho import mqtt
-from enum import Enum
+import ssl  # Import ssl module for TLS support
+from enum import IntEnum  # Use IntEnum for numeric enum values
 
-# Define enumerations for actions
-class GantryAction(Enum):
-    LEFT = "left"
-    RIGHT = "right"
-    NEUTRAL = "neutral"
+# Define enumerations for actions (numeric values)
+class GantryAction(IntEnum):
+    NEUTRAL = 0
+    RIGHT = 1
+    LEFT = 2
 
-class HoistAction(Enum):
-    UP = "up"
-    DOWN = "down"
-    NEUTRAL = "neutral"
+class HoistAction(IntEnum):
+    NEUTRAL = 0
+    UP = 1
+    DOWN = 2
 
-class TrolleyAction(Enum):
-    FORWARD = "forward"
-    BACKWARD = "backward"
-    NEUTRAL = "neutral"
+class TrolleyAction(IntEnum):
+    NEUTRAL = 0
+    FORWARD = 1
+    BACKWARD = 2
 
-class HandbrakeAction(Enum):
-    LOCK = "lock"
-    RELEASE = "release"
+class HandbrakeAction(IntEnum):
+    LOCK = 0
+    RELEASE = 1
 
-class EmergencyAction(Enum):
-    LOCK = "lock"
-    UNLOCK = "unlock"
+class EmergencyAction(IntEnum):
+    LOCK = 0
+    UNLOCK = 1
 
 # List of topics the Hub subscribes to
 SUBSCRIPTIONS = [
@@ -82,37 +82,46 @@ def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {msg.payload.decode('utf-8')}")
 
     try:
-        payload = msg.payload.decode("utf-8")
+        payload = json.loads(msg.payload.decode("utf-8"))  # Parse JSON payload
+        component = payload.get("component")
+        state = payload.get("state")
+
+        if not component or not state:
+            raise ValueError("Payload missing required fields 'component' or 'state'.")
+
+        # Normalize the state to uppercase for enum lookup
+        state_normalized = state.upper()
         action_enum = None
 
-        # Determine the action enum based on the topic
-        if msg.topic.startswith("/joysticks/gantry"):
-            action_enum = GantryAction(payload)
-        elif msg.topic.startswith("/joysticks/hoist"):
-            action_enum = HoistAction(payload)
-        elif msg.topic.startswith("/joysticks/trolley"):
-            action_enum = TrolleyAction(payload)
-        elif msg.topic.startswith("/joysticks/gantry/handbrake"):
-            action_enum = HandbrakeAction(payload)
-        elif msg.topic.startswith("/joysticks/emergency"):
-            action_enum = EmergencyAction(payload)
+        # Determine the appropriate action enum based on the component
+        if component == "gantry":
+            action_enum = GantryAction[state_normalized]
+        elif component == "hoist":
+            action_enum = HoistAction[state_normalized]
+        elif component == "trolley":
+            action_enum = TrolleyAction[state_normalized]
+        elif component == "handbrake":
+            action_enum = HandbrakeAction[state_normalized]
+        elif component == "emergency":
+            action_enum = EmergencyAction[state_normalized]
+        else:
+            raise ValueError(f"Invalid component: {component}")
 
-        # Log the action enum
-        if action_enum:
-            print(f"Processed action: {action_enum}")
+        print(f"Processed action: {component} -> {action_enum.value}")
 
         # Forward to the appropriate topic
         if msg.topic in PUBLISH_TOPICS:
             target_topic = PUBLISH_TOPICS[msg.topic]
-            client.publish(target_topic, payload=json.dumps({"action": payload}), qos=1)
-            print(f"Forwarded to {target_topic} with payload: {payload}")
+            client.publish(target_topic, payload=json.dumps(action_enum.value), qos=1)
+            print(f"Forwarded to {target_topic} with payload: {action_enum.value}")
 
-        # Also forward all messages to /hub/client
-        client.publish("/hub/client", payload=json.dumps({"topic": msg.topic, "action": payload}), qos=1)
-        print(f"Forwarded to /hub/client: {msg.topic}, payload: {payload}")
+        # Forward all messages to /hub/client
+        client.publish("/hub/client", payload=json.dumps({"topic": msg.topic, "action": action_enum.value}), qos=1)
+        print(f"Forwarded to /hub/client: {msg.topic}, payload: {action_enum.value}")
 
-    except ValueError as e:
-        print(f"Invalid action or topic: {e}")
+    except (ValueError, KeyError, json.JSONDecodeError) as e:
+        print(f"Invalid payload received: {msg.payload.decode('utf-8')} for topic: {msg.topic}")
+        print(f"Error: {e}")
 
 # Initialize the MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
@@ -122,7 +131,8 @@ client.on_subscribe = on_subscribe
 client.on_message = on_message
 
 # Enable TLS for secure connection
-client.tls_set(tls_version=paho.ssl.PROTOCOL_TLS)
+client.tls_set(tls_version=ssl.PROTOCOL_TLS)
+
 client.username_pw_set("shark", "FishFish1")
 
 # Connect to HiveMQ broker

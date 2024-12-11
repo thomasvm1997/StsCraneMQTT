@@ -1,7 +1,7 @@
 import time
 import paho.mqtt.client as paho
-from paho import mqtt
 import keyboard
+import json
 
 # Topics for joystick actions
 JOYSTICK_TOPICS = {
@@ -20,15 +20,6 @@ JOYSTICK_TOPICS = {
     "emergency_unlock": "/joysticks/emergency/unlock",
 }
 
-# State tracking
-last_action = {
-    "gantry": None,
-    "hoist": None,
-    "trolley": None,
-    "handbrake": None,
-    "emergency": None
-}
-
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
@@ -42,9 +33,6 @@ def on_publish(client, userdata, mid, properties=None):
 
 # Function to send joystick states
 def send_joystick_states(client):
-    global last_action
-
-    # Default all states to neutral
     joystick_states = {
         "gantry": "neutral",
         "hoist": "neutral",
@@ -53,51 +41,60 @@ def send_joystick_states(client):
         "emergency": "unlock"
     }
 
-    # Check joystick button states
+    # Gantry input
     if keyboard.is_pressed('a'):
         joystick_states["gantry"] = "left"
     elif keyboard.is_pressed('d'):
         joystick_states["gantry"] = "right"
+    else:
+        joystick_states["gantry"] = "neutral"
 
+    # Hoist input
     if keyboard.is_pressed('w'):
         joystick_states["hoist"] = "up"
     elif keyboard.is_pressed('s'):
         joystick_states["hoist"] = "down"
+    else:
+        joystick_states["hoist"] = "neutral"
 
+    # Trolley input
     if keyboard.is_pressed('i'):
         joystick_states["trolley"] = "forward"
     elif keyboard.is_pressed('k'):
         joystick_states["trolley"] = "backward"
+    else:
+        joystick_states["trolley"] = "neutral"
 
+    # Handbrake input
     if keyboard.is_pressed('1'):
         joystick_states["handbrake"] = "lock"
-    elif keyboard.is_pressed('2'):
+    else:
         joystick_states["handbrake"] = "release"
 
+    # Emergency input
     if keyboard.is_pressed('z'):
         joystick_states["emergency"] = "lock"
-    elif keyboard.is_pressed('x'):
+    else:
         joystick_states["emergency"] = "unlock"
 
-    # Publish state changes
+    # Publish each state
     for component, state in joystick_states.items():
-        if state != last_action[component]:
-            topic = JOYSTICK_TOPICS.get(f"{component}_{state}")
-            if topic:
-                client.publish(topic, f"{component} {state}", qos=1)
-                print(f"{component.capitalize()} {state}")
-                last_action[component] = state
+        topic = JOYSTICK_TOPICS.get(f"{component}_{state}")
+        if topic:
+            payload = json.dumps({"component": component, "state": state})
+            client.publish(topic, payload, qos=1)
+            print(f"Published to {topic}: {payload}")
 
 # Initialize MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
 client.on_connect = on_connect
 client.on_publish = on_publish
 
-# Enable TLS for secure MQTT connection
-client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+# Enable TLS for secure connection
+client.tls_set()
 client.username_pw_set("shark", "FishFish1")
 
-# Connect to the HiveMQ broker
+# Connect to the broker
 client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 
 # Start the MQTT client loop in the background
