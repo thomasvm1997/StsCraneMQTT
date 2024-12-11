@@ -8,7 +8,7 @@ namespace Wpe.SharkCrane.Core.Models
 {
     public abstract class BaseCraneObject
     {
-        private double increment;
+        private double increment = 0.2D;
         public double Increment 
         {
             get { return increment; }

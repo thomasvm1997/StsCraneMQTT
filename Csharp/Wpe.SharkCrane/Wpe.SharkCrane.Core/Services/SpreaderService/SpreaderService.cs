@@ -25,7 +25,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            MainSpreader = new Spreader { IsLocked = false, Width = 5d};
+            MainSpreader = new Spreader {};
         }
 
         private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
@@ -59,13 +59,17 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
                 {
 
                     case SpreaderRoutes.SubscribeOpen:
-                        MainSpreader.Width += spreaderMessage.Increment;
+                        MainSpreader.Width += MainSpreader.Increment;
+                        MainSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
+                        MainSpreader.Increment += 0.2D;
                         publishTopic = SpreaderRoutes.PublishWidth;
                         return new BaseResultModel { IsSuccess = true };
 
 
                     case SpreaderRoutes.SubscribeClose:
-                        MainSpreader.Width -= spreaderMessage.Increment;
+                        MainSpreader.Width -= MainSpreader.Increment;
+                        MainSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
+                        MainSpreader.Increment += 0.2d;
                         publishTopic = SpreaderRoutes.PublishWidth;
                         return new BaseResultModel { IsSuccess = true };
                     
@@ -77,6 +81,11 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
                     case SpreaderRoutes.SubscribeUnlock:
                         MainSpreader.IsLocked = spreaderMessage.IsLocked;
                         publishTopic = SpreaderRoutes.PublishUnlock;
+                        return new BaseResultModel { IsSuccess = true };
+
+                    case SpreaderRoutes.SubscribeNeutral:
+                        MainSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
+                        MainSpreader.Increment = 0.2D;
                         return new BaseResultModel { IsSuccess = true };
 
                     default:
