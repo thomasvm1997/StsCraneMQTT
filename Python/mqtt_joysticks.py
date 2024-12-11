@@ -18,6 +18,9 @@ JOYSTICK_TOPICS = {
     "handbrake_release": "/joysticks/gantry/handbrake/release",
     "emergency_lock": "/joysticks/emergency/lock",
     "emergency_unlock": "/joysticks/emergency/unlock",
+    "spreader_open": "/joysticks/spreader/open",
+    "spreader_close": "/joysticks/spreader/close",
+    "spreader_neutral": "/joysticks/spreader/neutral",
 }
 
 # Callback for connection
@@ -38,7 +41,8 @@ def send_joystick_states(client):
         "hoist": "neutral",
         "trolley": "neutral",
         "handbrake": "release",
-        "emergency": "unlock"
+        "emergency": "unlock",
+        "spreader": "neutral"
     }
 
     # Gantry input
@@ -65,6 +69,14 @@ def send_joystick_states(client):
     else:
         joystick_states["trolley"] = "neutral"
 
+    # Spreader input
+    if keyboard.is_pressed('o'):
+        joystick_states["spreader"] = "open"
+    elif keyboard.is_pressed('c'):
+        joystick_states["spreader"] = "close"
+    else:
+        joystick_states["spreader"] = "neutral"
+
     # Handbrake input
     if keyboard.is_pressed('1'):
         joystick_states["handbrake"] = "lock"
@@ -77,11 +89,23 @@ def send_joystick_states(client):
     else:
         joystick_states["emergency"] = "unlock"
 
-    # Publish each state
+    # Publish each state and print the result
     for component, state in joystick_states.items():
-        topic = JOYSTICK_TOPICS.get(f"{component}_{state}")
-        if topic:
+        if component == "spreader":
+            if state == "open":
+                topic = JOYSTICK_TOPICS["spreader_open"]
+                payload = json.dumps({"component": component, "state": "open"})
+            elif state == "close":
+                topic = JOYSTICK_TOPICS["spreader_close"]
+                payload = json.dumps({"component": component, "state": "close"})
+            else:
+                topic = JOYSTICK_TOPICS["spreader_neutral"]
+                payload = json.dumps({"component": component, "state": "neutral"})
+        else:
+            topic = JOYSTICK_TOPICS.get(f"{component}_{state}")
             payload = json.dumps({"component": component, "state": state})
+        
+        if topic:
             client.publish(topic, payload, qos=1)
             print(f"Published to {topic}: {payload}")
 

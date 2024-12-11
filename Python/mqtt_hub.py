@@ -2,7 +2,7 @@ import time
 import json
 import paho.mqtt.client as paho
 import ssl  # Import ssl module for TLS support
-from enum import IntEnum  # Use IntEnum for numeric enum values
+from enum import IntEnum, Enum
 
 # Define enumerations for actions (numeric values)
 class GantryAction(IntEnum):
@@ -20,6 +20,11 @@ class TrolleyAction(IntEnum):
     FORWARD = 1
     BACKWARD = 2
 
+class SpreaderAction(IntEnum):
+    NEUTRAL = 0
+    OPEN = 1
+    CLOSE = 2
+
 class HandbrakeAction(IntEnum):
     LOCK = 0
     RELEASE = 1
@@ -27,6 +32,50 @@ class HandbrakeAction(IntEnum):
 class EmergencyAction(IntEnum):
     LOCK = 0
     UNLOCK = 1
+
+# Define the SpreaderMovement Enum and Spreader class
+class SpreaderMovement(Enum):
+    OPEN = 0
+    CLOSE = 1
+    NEUTRAL = 2
+
+class BaseCraneObject:
+    def __init__(self):
+        self._increment = 0.2  # Default value
+
+    @property
+    def increment(self):
+        return self._increment
+
+    @increment.setter
+    def increment(self, value):
+        if value <= 0.2:
+            self._increment = 0.2
+        elif value >= 2.0:
+            self._increment = 2.0
+        else:
+            self._increment = value
+
+class Spreader(BaseCraneObject):
+    def __init__(self):
+        super().__init__()
+        self._width = 6.06  # Default value
+        self.spreader_movement = SpreaderMovement.NEUTRAL  # Default movement
+        self.is_locked = False  # Default lock state
+
+    @property
+    def width(self):
+        return self._width
+
+    @width.setter
+    def width(self, value):
+        if value >= 14.0:
+            self._width = 14.0
+        elif value <= 6.06:
+            self._width = 6.06
+        else:
+            self._width = value
+
 
 # List of topics the Hub subscribes to
 SUBSCRIPTIONS = [
@@ -43,6 +92,9 @@ SUBSCRIPTIONS = [
     "/joysticks/gantry/handbrake/release",
     "/joysticks/emergency/lock",
     "/joysticks/emergency/unlock",
+    "/joysticks/spreader/open",
+    "/joysticks/spreader/close",
+    "/joysticks/spreader/neutral",
 ]
 
 # Map incoming topics to their corresponding Hub publication topics
@@ -60,6 +112,9 @@ PUBLISH_TOPICS = {
     "/joysticks/gantry/handbrake/release": "/hub/gantry/handbrake/release",
     "/joysticks/emergency/lock": "/hub/emergency/lock",
     "/joysticks/emergency/unlock": "/hub/emergency/unlock",
+    "/joysticks/spreader/open": "/hub/spreader/open",
+    "/joysticks/spreader/close": "/hub/spreader/close",
+    "/joysticks/spreader/neutral": "/hub/spreader/neutral",
 }
 
 # Callback for successful connection
@@ -79,74 +134,98 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 
 # Callback for receiving messages
 def on_message(client, userdata, msg):
-    print(f"Received message on topic {msg.topic}: {msg.payload.decode('utf-8')}")
-
+    print(f"Received message on topic {msg.topic}: {msg.payload.decode()}")
+    
     try:
-        payload = json.loads(msg.payload.decode("utf-8"))  # Parse JSON payload
-        component = payload.get("component")
-        state = payload.get("state")
+        payload = json.loads(msg.payload)
+        component = payload.get('component')
+        state = payload.get('state')
 
-        if not component or not state:
-            raise ValueError("Payload missing required fields 'component' or 'state'.")
+        if component and state is not None:
+            print(f"Processed action: {component} -> {state}")
 
-        # Normalize the state to uppercase for enum lookup
-        state_normalized = state.upper()
-        action_enum = None
+            # Map the state to the correct IntEnum class
+            action_enum = None
+            if component == "gantry":
+                action_enum = GantryAction
+            elif component == "hoist":
+                action_enum = HoistAction
+            elif component == "trolley":
+                action_enum = TrolleyAction
+            elif component == "spreader":
+                action_enum = SpreaderAction
+            elif component == "handbrake":
+                action_enum = HandbrakeAction
+            elif component == "emergency":
+                action_enum = EmergencyAction
 
-        # Determine the appropriate action enum based on the component
-        if component == "gantry":
-            action_enum = GantryAction[state_normalized]
-        elif component == "hoist":
-            action_enum = HoistAction[state_normalized]
-        elif component == "trolley":
-            action_enum = TrolleyAction[state_normalized]
-        elif component == "handbrake":
-            action_enum = HandbrakeAction[state_normalized]
-        elif component == "emergency":
-            action_enum = EmergencyAction[state_normalized]
+            if action_enum:
+                # Convert the state to the corresponding IntEnum value
+                try:
+                    int_value = action_enum[state.upper()].value  # Ensure state is converted to the corresponding enum
+                    # If it's the spreader and movement is neutral, send the custom payload
+                    if component == "spreader" and state.lower() == "neutral":
+                        spreader = Spreader()  
+                        spreader.increment = 0.2
+                        spreader.width = 6.06 
+                        spreader.spreader_movement = SpreaderMovement.NEUTRAL  # Neutral state
+                        spreader.is_locked = False  # Lock state
+
+                        # Create a dictionary for the payload
+                        payload_data = {
+                            "increment": spreader.increment,
+                            "width": spreader.width,
+                            "spreader_movement": spreader.spreader_movement.value,  # Enum value (NEUTRAL = 2)
+                            "is_locked": spreader.is_locked
+                        }
+
+                        # Publish the payload to the spreader neutral topic
+                        publish_topic = PUBLISH_TOPICS.get("/joysticks/spreader/neutral")
+                        if publish_topic:
+                            client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
+                            print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
+                    else:
+                        # For other states, just forward the integer value as normal
+                        publish_topic = PUBLISH_TOPICS.get(msg.topic)
+                        if publish_topic:
+                            client.publish(publish_topic, payload=json.dumps(int_value), qos=1)
+                            print(f"Forwarded to {publish_topic} with payload: {int_value}")
+                        else:
+                            print(f"Invalid topic: {msg.topic}")
+                except KeyError:
+                    print(f"Invalid state {state} for component {component}")
+            else:
+                print(f"Unknown component: {component}")
+
         else:
-            raise ValueError(f"Invalid component: {component}")
+            print(f"Invalid payload received: {msg.payload.decode()}")
 
-        print(f"Processed action: {component} -> {action_enum.value}")
+    except Exception as e:
+        print(f"Error: {str(e)}")
 
-        # Forward to the appropriate topic
-        if msg.topic in PUBLISH_TOPICS:
-            target_topic = PUBLISH_TOPICS[msg.topic]
-            client.publish(target_topic, payload=json.dumps(action_enum.value), qos=1)
-            print(f"Forwarded to {target_topic} with payload: {action_enum.value}")
-
-        # Forward all messages to /hub/client
-        client.publish("/hub/client", payload=json.dumps({"topic": msg.topic, "action": action_enum.value}), qos=1)
-        print(f"Forwarded to /hub/client: {msg.topic}, payload: {action_enum.value}")
-
-    except (ValueError, KeyError, json.JSONDecodeError) as e:
-        print(f"Invalid payload received: {msg.payload.decode('utf-8')} for topic: {msg.topic}")
-        print(f"Error: {e}")
-
-# Initialize the MQTT client
+# Initialize MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
 client.on_connect = on_connect
 client.on_publish = on_publish
 client.on_subscribe = on_subscribe
 client.on_message = on_message
 
-# Enable TLS for secure connection
-client.tls_set(tls_version=ssl.PROTOCOL_TLS)
-
+# Set TLS configuration
+client.tls_set_context(ssl.create_default_context())
 client.username_pw_set("shark", "FishFish1")
 
-# Connect to HiveMQ broker
+# Connect to the MQTT broker
 client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 
-# Start the MQTT loop in the background
+# Start the loop
 client.loop_start()
 
-# Keep the script running
 try:
     while True:
-        time.sleep(1)
+        time.sleep(1)  # Keep the hub running
 except KeyboardInterrupt:
-    print("Exiting...")
+    print("Hub interrupted by user.")
 finally:
     client.loop_stop()
     client.disconnect()
+    print("MQTT client disconnected.")
