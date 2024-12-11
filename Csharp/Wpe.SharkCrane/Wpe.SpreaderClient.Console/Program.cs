@@ -39,19 +39,19 @@ while(true)
 {
     Console.WriteLine("listening");
     
-    if(counter < 5) 
-    {
-    await hiveClient.PublishServiceAsync("/hub/spreader/open", spreaderOpentring);
-    }
-    if(counter == 6)
-    {
-        await hiveClient.PublishServiceAsync("/hub/spreader/neutral", spreaderNeutralString);
-    }
-    if(counter == 6) {
-    await hiveClient.PublishServiceAsync("/hub/spreader/close", spreaderCloseString);
-    }
+    //if(counter < 5) 
+    //{
+    //await hiveClient.PublishServiceAsync("/hub/spreader/open", spreaderOpentring);
+    //}
+    //if(counter == 6)
+    //{
+    //    await hiveClient.PublishServiceAsync("/hub/spreader/neutral", spreaderNeutralString);
+    //}
+    //if(counter == 6) {
+    //await hiveClient.PublishServiceAsync("/hub/spreader/close", spreaderCloseString);
+    //}
 
-    counter++;
+    //counter++;
     await Task.Delay(1000);
 
 }

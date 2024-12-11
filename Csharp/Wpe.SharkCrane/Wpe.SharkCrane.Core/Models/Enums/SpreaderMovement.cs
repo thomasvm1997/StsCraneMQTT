@@ -8,8 +8,8 @@ namespace Wpe.SharkCrane.Core.Models.Enums
 {
     public enum SpreaderMovement
     {
-        Open, // value: 0
-        Close, //value: 1
-        Neutral //value: 2
+        Neutral, // value: 0
+        Open, //value: 1
+        Close //value: 2
     }
 }
