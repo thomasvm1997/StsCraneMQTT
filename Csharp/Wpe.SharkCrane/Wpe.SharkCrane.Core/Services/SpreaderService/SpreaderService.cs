@@ -17,7 +17,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
 {
     public class SpreaderService : ISpreaderService
     {
-        public Spreader MainSpreader { get;}
+        public Spreader StorageSpreader { get;}
         private readonly IHiveMQService _hiveMQService;
         private string publishTopic;
 
@@ -25,7 +25,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            MainSpreader = new Spreader {};
+            StorageSpreader = new Spreader {};
         }
 
         private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
@@ -36,16 +36,23 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
  
             BaseResultModel result = ChangeMainProperties(spreaderMessage, e.Topic);
 
-            string mainsString = JsonSerializer.Serialize(MainSpreader);
+            string mainsString = JsonSerializer.Serialize(StorageSpreader);
 
 
-            if (result.IsSuccess == true)
+            if (result.IsSuccess == true && !String.IsNullOrEmpty(publishTopic))
             {
                 await _hiveMQService.PublishServiceAsync(publishTopic, mainsString);
             }
             else
             {
+                if (String.IsNullOrEmpty(publishTopic))
+                {
+                    Console.Write("IN NEUTRAL MODE\n");
+                }
+                else 
+                {
                 Console.WriteLine(result.Errors.First());
+                }
             }
 
         }
@@ -59,34 +66,35 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
                 {
 
                     case SpreaderRoutes.SubscribeOpen:
-                        MainSpreader.Width += MainSpreader.Increment;
-                        MainSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
-                        MainSpreader.Increment += 0.2D;
+                        StorageSpreader.Increment += 0.2D;
+                        StorageSpreader.Width += StorageSpreader.Increment;
+                        StorageSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
                         publishTopic = SpreaderRoutes.PublishWidth;
                         return new BaseResultModel { IsSuccess = true };
 
 
                     case SpreaderRoutes.SubscribeClose:
-                        MainSpreader.Width -= MainSpreader.Increment;
-                        MainSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
-                        MainSpreader.Increment += 0.2d;
+                        StorageSpreader.Increment += 0.2D;
+                        StorageSpreader.Width -= StorageSpreader.Increment;
+                        StorageSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
                         publishTopic = SpreaderRoutes.PublishWidth;
                         return new BaseResultModel { IsSuccess = true };
                     
                     case SpreaderRoutes.SubscribeLock:
-                        MainSpreader.IsLocked = spreaderMessage.IsLocked;
+                        StorageSpreader.IsLocked = spreaderMessage.IsLocked;
                         publishTopic = SpreaderRoutes.PublishLock;
                         return new BaseResultModel { IsSuccess = true };
 
                     case SpreaderRoutes.SubscribeUnlock:
-                        MainSpreader.IsLocked = spreaderMessage.IsLocked;
+                        StorageSpreader.IsLocked = spreaderMessage.IsLocked;
                         publishTopic = SpreaderRoutes.PublishUnlock;
                         return new BaseResultModel { IsSuccess = true };
 
                     case SpreaderRoutes.SubscribeNeutral:
-                        MainSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
-                        MainSpreader.Increment = 0.2D;
-                        return new BaseResultModel { IsSuccess = true };
+                        StorageSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
+                        StorageSpreader.Increment = 0;
+                        publishTopic = "";
+                        return new BaseResultModel { IsSuccess = false };
 
                     default:
                         var list = new List<string> { $"{topic} is not recognized" };
