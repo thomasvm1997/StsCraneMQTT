@@ -43,6 +43,19 @@ namespace Wpe.SharkCrane.Test.HoistTests
             Assert.Equal(expectedLength, hoist.Length);
         }
         [Fact]
+        public void CreateHoistObject_WithLengthHigherThanMaximum_ReturnsSpreaderObjectWithCorrectedProperties()
+        {
+            // Arrange
+            double length = 110d;
+            double expectedLength = 100d;
+            // Act
+            Hoist hoist = new Hoist { Length = length };
+
+            // Assert
+            Assert.NotNull(hoist);
+            Assert.Equal(expectedLength, hoist.Length);
+        }
+        [Fact]
         public void ChangeMainProperties_SubscribeUp_UpdatesWidthSuccessfully()
         {
             // Arrange

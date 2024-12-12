@@ -51,6 +51,23 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
         }
 
         [Fact]
+        public void CreateSpreaderObject_WithWidthLowerThanMinimum_ReturnsSpreaderObjectWithCorrectedProperties()
+        {
+            // Arrange
+            double width = 2d;
+            bool isLocked = true;
+            double expectedWidth = 6.06d;
+
+            // Act
+            Spreader spreader = new Spreader { IsLocked = isLocked, Width = width };
+
+            // Assert
+            Assert.NotNull(spreader);
+            Assert.Equal(expectedWidth, spreader.Width);
+            Assert.Equal(isLocked, spreader.IsLocked);
+        }
+
+        [Fact]
         public void ChangeMainProperties_SubscribeOpen_UpdatesWidthSuccessfully()
         {
             // Arrange
