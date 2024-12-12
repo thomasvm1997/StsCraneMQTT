@@ -15,13 +15,13 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService.SpreaderRoute
         public const string SubscribeClose = BaseSubscribe + "/close";
         public const string SubscribeLock = BaseSubscribe + "/lock";
         public const string SubscribeUnlock = BaseSubscribe + "/unlock";
+        public const string SubscribeNeutral = BaseSubscribe + "/neutral";
 
         #endregion
 
         #region Publish
         public const string BasePublish = "/spreader";
-        public const string PublishOpen = BasePublish + "/open";
-        public const string PublishClose = BasePublish + "/close";
+        public const string PublishWidth = BasePublish + "/width";
         public const string PublishLock = BasePublish + "/lock";
         public const string PublishUnlock = BasePublish + "/unlock";
         #endregion

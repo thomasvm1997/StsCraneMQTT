@@ -30,7 +30,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
         }
 
         [Fact]
-        public void CreateSpreaderObject_WithLengthLowerThanMinimum_ReturnsSpreaderObjectWithCorrectedProperties()
+        public void CreateHoistObject_WithLengthLowerThanMinimum_ReturnsSpreaderObjectWithCorrectedProperties()
         {
             // Arrange
             double length = -5d;
@@ -53,7 +53,8 @@ namespace Wpe.SharkCrane.Test.HoistTests
             var hoist = new Hoist { Increment = 1 };
 
             const string topic = HoistRoutes.SubscribeUp;
-            var expectedValue = hoistService.MainHoist.Length - hoist.Increment;
+            var calculatedLength = hoistService.MainHoist.Length - hoist.Increment;
+            var expectedValue = calculatedLength <= 0 ? 0 : calculatedLength;
 
             // Act
             var result = hoistService.ChangeMainProperties(hoist, topic);

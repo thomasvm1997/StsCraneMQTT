@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Wpe.SharkCrane.Core.Models;
+using Wpe.SharkCrane.Core.Models.Enums;
 using Wpe.SharkCrane.Core.Services.HiveService;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
 using Wpe.SharkCrane.Core.Services.SpreaderService;
@@ -27,16 +28,30 @@ Console.WriteLine("Hello, World!");
 await hiveClient.SubscribeServiceAsync(SpreaderRoutes.BaseSubscribeWildcard);
 
 
-var spreader = new Spreader { IsLocked = true, Increment = 1d };
-var spreaderString = JsonSerializer.Serialize(spreader); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+var spreaderOpen = new Spreader { SpreaderMovement = SpreaderMovement.Open, Increment= 0.2d};
+var spreaderNeutral = new Spreader { SpreaderMovement = SpreaderMovement.Neutral, Increment = 0.2d }; //HUB MOET STANDAARD INCREMENT DOORGEVEN
+var spreaderClose = new Spreader {SpreaderMovement = SpreaderMovement.Close , Increment = 0.2d };
+var spreaderOpentring = JsonSerializer.Serialize(spreaderOpen); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+var spreaderNeutralString = JsonSerializer.Serialize(spreaderNeutral); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+var spreaderCloseString = JsonSerializer.Serialize(spreaderClose); // Mock spreader info van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
+int counter = 0;
 while(true)
 {
     Console.WriteLine("listening");
     
-     //mocken om data te verkijgen van hub => DEZE CODE NIET NODIG IN VOLLEDIG PROGRAMMA
-    await hiveClient.PublishServiceAsync("/hub/spreader/lock", spreaderString);       
-    await hiveClient.PublishServiceAsync("/hub/spreader/open", spreaderString);       
-    //We doen alsof we een message krijgen.
+    //if(counter < 5) 
+    //{
+    //await hiveClient.PublishServiceAsync("/hub/spreader/open", spreaderOpentring);
+    //}
+    //if(counter == 6)
+    //{
+    //    await hiveClient.PublishServiceAsync("/hub/spreader/neutral", spreaderNeutralString);
+    //}
+    //if(counter == 6) {
+    //await hiveClient.PublishServiceAsync("/hub/spreader/close", spreaderCloseString);
+    //}
+
+    //counter++;
     await Task.Delay(1000);
 
 }

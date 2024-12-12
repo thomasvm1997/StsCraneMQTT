@@ -8,6 +8,25 @@ namespace Wpe.SharkCrane.Core.Models
 {
     public abstract class BaseCraneObject
     {
-        public double Increment { get; set; }
+        private double increment = 0;
+        public double Increment 
+        {
+            get { return increment; }
+            set 
+            { 
+                if(value <= 0) 
+                {
+                    increment = 0;
+                }
+                else if(value >= 2D)
+                {
+                    increment = 2D;
+                }
+                else
+                {
+                    increment = value;
+                }
+            }
+        }
     }
 }
