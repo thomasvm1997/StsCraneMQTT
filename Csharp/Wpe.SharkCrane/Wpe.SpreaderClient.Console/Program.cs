@@ -43,7 +43,7 @@ while(true)
     //{
     //await hiveClient.PublishServiceAsync("/hub/spreader/open", spreaderOpentring);
     //}
-    //if(counter == 6)
+    //if(counter < 6)
     //{
     //    await hiveClient.PublishServiceAsync("/hub/spreader/neutral", spreaderNeutralString);
     //}
