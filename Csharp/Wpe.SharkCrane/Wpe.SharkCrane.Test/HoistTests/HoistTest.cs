@@ -50,18 +50,19 @@ namespace Wpe.SharkCrane.Test.HoistTests
             var hoistService = new HoistService(mockHiveMQService.Object);
 
 
-            var hoist = new Hoist { Increment = 1 };
+            var hoist = new Hoist { Increment = 0.2d };
+            hoistService.StorageHoist.Length = 10d;
+            var calculatedValue = hoistService.StorageHoist.Length - hoist.Increment;
+            var expectedValue = calculatedValue <= 0 ? 0 : calculatedValue;
 
             const string topic = HoistRoutes.SubscribeUp;
-            var calculatedLength = hoistService.MainHoist.Length - hoist.Increment;
-            var expectedValue = calculatedLength <= 0 ? 0 : calculatedLength;
 
             // Act
             var result = hoistService.ChangeMainProperties(hoist, topic);
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(expectedValue, hoistService.MainHoist.Length);
+            Assert.Equal(expectedValue, hoistService.StorageHoist.Length);
         }
         [Fact]
         public void ChangeMainProperties_SubscribeDown_UpdatesWidthSuccessfully()
@@ -71,17 +72,19 @@ namespace Wpe.SharkCrane.Test.HoistTests
             var hoistService = new HoistService(mockHiveMQService.Object);
 
 
-            var hoist = new Hoist { Increment = 1 };
+            var hoist = new Hoist { Increment = 0.2d };
+            hoistService.StorageHoist.Length = 10d;
+            var calculatedValue = hoistService.StorageHoist.Length + hoist.Increment;
+            var expectedValue = calculatedValue <= 0 ? 0 : calculatedValue;
 
             const string topic = HoistRoutes.SubscribeDown;
-            var expectedValue = hoistService.MainHoist.Length + hoist.Increment;
 
             // Act
             var result = hoistService.ChangeMainProperties(hoist, topic);
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(expectedValue, hoistService.MainHoist.Length);
+            Assert.Equal(expectedValue, hoistService.StorageHoist.Length);
         }
 
         [Fact]

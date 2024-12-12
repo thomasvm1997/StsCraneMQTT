@@ -22,7 +22,7 @@ namespace Wpe.SharkCrane.Core.Services.HoistService
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            StorageHoist = new Hoist { Length = 4d};
+            StorageHoist = new Hoist { };
         }
 
         private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
