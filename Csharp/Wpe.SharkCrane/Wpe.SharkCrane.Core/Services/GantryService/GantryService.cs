@@ -15,14 +15,14 @@ namespace Wpe.SharkCrane.Core.Services.GantryService
 {
     public class GantryService : IGantryService
     {
-        public Gantry MainGantry { get; }
+        public Gantry StorageGantry { get; }
         private readonly IHiveMQService _hiveMQService;
         private string publishTopic;
         public GantryService(IHiveMQService hiveMQService)
         {
             _hiveMQService = hiveMQService;
             _hiveMQService.MessageReceived += OnMessageReceived;
-            MainGantry = new Gantry { Distance = 4d };
+            StorageGantry = new Gantry { };
         }
 
         private async void OnMessageReceived(object sender, CustomMessageReceivedEventArgs e)
@@ -34,7 +34,7 @@ namespace Wpe.SharkCrane.Core.Services.GantryService
 
             BaseResultModel result = ChangeMainProperties(gantryMessage, e.Topic);
 
-            string mainsString = JsonSerializer.Serialize(MainGantry);
+            string mainsString = JsonSerializer.Serialize(StorageGantry);
 
 
             if (result.IsSuccess == true)
@@ -56,23 +56,33 @@ namespace Wpe.SharkCrane.Core.Services.GantryService
                 {
 
                     case GantryRoutes.SubscribeRight:
-                        MainGantry.Distance += gantryMessage.Increment;
-                        publishTopic = GantryRoutes.PublishRight;
+                        StorageGantry.Increment += gantryMessage.Increment;
+                        StorageGantry.Distance += StorageGantry.Distance;
+                        StorageGantry.GantryMovement = gantryMessage.GantryMovement;
+                        publishTopic = GantryRoutes.PublishLocation;
                         return new BaseResultModel { IsSuccess = true };
 
                     case GantryRoutes.SubscribeLeft:
-                        MainGantry.Distance -= gantryMessage.Increment;
-                        publishTopic = GantryRoutes.PublishLeft;
+                        StorageGantry.Increment += gantryMessage.Increment;
+                        StorageGantry.Distance -= StorageGantry.Increment;
+                        StorageGantry.GantryMovement = gantryMessage.GantryMovement;
+                        publishTopic = GantryRoutes.PublishLocation;
                         return new BaseResultModel { IsSuccess = true };
 
                     case GantryRoutes.SubscribeLock:
-                        MainGantry.IsHandBrakeOn = gantryMessage.IsHandBrakeOn;
-                        publishTopic = GantryRoutes.SubscribeLock;
+                        StorageGantry.IsHandBrakeOn = gantryMessage.IsHandBrakeOn;
+                        publishTopic = GantryRoutes.PublishLocked;
                         return new BaseResultModel { IsSuccess = true };
 
-                    case GantryRoutes.SubscribeRelease:
-                        MainGantry.IsHandBrakeOn = gantryMessage.IsHandBrakeOn;
-                        publishTopic = GantryRoutes.PublishRelease;
+                    case GantryRoutes.SubscribeUnlock:
+                        StorageGantry.IsHandBrakeOn = gantryMessage.IsHandBrakeOn;
+                        publishTopic = GantryRoutes.PublishUnlocked;
+                        return new BaseResultModel { IsSuccess = true };
+
+                    case GantryRoutes.SubscribeNeutral:
+                        StorageGantry.GantryMovement = gantryMessage.GantryMovement;
+                        StorageGantry.Increment = 0;
+                        publishTopic = "";
                         return new BaseResultModel { IsSuccess = true };
 
                     default:

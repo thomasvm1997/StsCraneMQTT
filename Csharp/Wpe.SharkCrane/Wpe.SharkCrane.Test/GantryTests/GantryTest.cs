@@ -50,7 +50,7 @@ namespace Wpe.SharkCrane.Test.GantryTests
             var gantryService = new GantryService(mockHiveMQService.Object);
 
             var gantry = new Gantry { Increment = 5 };
-            var expectedValue = gantryService.MainGantry.Distance + gantry.Increment;
+            var expectedValue = gantryService.StorageGantry.Distance + gantry.Increment;
             const string topic = GantryRoutes.SubscribeRight;
 
             // Act
@@ -58,7 +58,7 @@ namespace Wpe.SharkCrane.Test.GantryTests
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(expectedValue, gantryService.MainGantry.Distance);
+            Assert.Equal(expectedValue, gantryService.StorageGantry.Distance);
         }
 
         [Fact]
@@ -69,7 +69,7 @@ namespace Wpe.SharkCrane.Test.GantryTests
             var gantryService = new GantryService(mockHiveMQService.Object);
 
             var gantry = new Gantry { Increment = 3 };
-            var calculatedDistance = gantryService.MainGantry.Distance - gantry.Increment;
+            var calculatedDistance = gantryService.StorageGantry.Distance - gantry.Increment;
             var expectedValue = calculatedDistance <= 0 ? 0 : calculatedDistance;
             const string topic = GantryRoutes.SubscribeLeft;
 
@@ -78,7 +78,7 @@ namespace Wpe.SharkCrane.Test.GantryTests
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(expectedValue, gantryService.MainGantry.Distance);
+            Assert.Equal(expectedValue, gantryService.StorageGantry.Distance);
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace Wpe.SharkCrane.Test.GantryTests
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(gantry.IsHandBrakeOn, gantryService.MainGantry.IsHandBrakeOn);
+            Assert.Equal(gantry.IsHandBrakeOn, gantryService.StorageGantry.IsHandBrakeOn);
         }
 
         [Fact]
@@ -107,14 +107,14 @@ namespace Wpe.SharkCrane.Test.GantryTests
             var gantryService = new GantryService(mockHiveMQService.Object);
 
             var gantry = new Gantry { IsHandBrakeOn = false };
-            const string topic = GantryRoutes.SubscribeRelease;
+            const string topic = GantryRoutes.SubscribeUnlock;
 
             // Act
             var result = gantryService.ChangeMainProperties(gantry, topic);
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(gantry.IsHandBrakeOn, gantryService.MainGantry.IsHandBrakeOn);
+            Assert.Equal(gantry.IsHandBrakeOn, gantryService.StorageGantry.IsHandBrakeOn);
         }
 
         [Fact]
