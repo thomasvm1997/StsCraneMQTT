@@ -13,12 +13,12 @@ namespace Wpe.SharkCrane.Core.Services.HoistService.HoistRoute
         public const string BaseSubscribeWildcard = "/hub/hoist/#";
         public const string SubscribeUp = BaseSubscribe + "/up";
         public const string SubscribeDown = BaseSubscribe + "/down";
+        public const string SubscribeNeutral = BaseSubscribe + "/neutral";
 
         #endregion
         #region Publish
         public const string BasePublish = "/hoist";
-        public const string PublishUp = BasePublish + "/up";
-        public const string PublishDown = BasePublish + "/down";
+        public const string PublishLocation = BasePublish + "/location";
         #endregion
 
     }

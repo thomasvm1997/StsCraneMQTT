@@ -8,7 +8,7 @@ namespace Wpe.SharkCrane.Core.Models
 {
     public class Gantry : BaseCraneObject
     {
-        private double distance;
+        private double distance = 0;
         public double Distance 
         {
             get { return distance; }
