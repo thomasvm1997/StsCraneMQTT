@@ -45,7 +45,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
             }
             else if (String.IsNullOrEmpty(publishTopic)) //In neutraal zetten we de publishTopic op null
             {
-                Console.Write("IN NEUTRAL MODE\n");
+                Console.WriteLine("IN NEUTRAL MODE");
             }
             else 
             {
