@@ -9,7 +9,8 @@ class Trolley:
         self.height = height
         self.min_x = min_x
         self.max_x = max_x
-        self.speed = 0.2 #minimum speed
+        self.speed = 0.2 #minimum speed m/s
+        self.max_speed = 2.0 #maximum speed m/s
         self.emergency_stop = False
         self.last_update = time.time()
         self.last_message_time = time.time()
@@ -27,9 +28,11 @@ class Trolley:
             self.x - self.max_x
     
     def increment_speed(self):
-        if not self.emergency_stop:
-            self.speed += 0.2  #increase speed by 0.2 m/s
+        if self.speed < self.max_speed:
+            self.speed = min(self.speed + 0.2, self.max_speed)  #increase speed by 0.2 m/s, capped at 2 m/s
             print(f"Speed increased to {self.speed} m/s")
+        else:
+            print("Maximum speed reached")
 
     def reset_speed(self):
         self.speed = 0.2  #reset to minimum speed
