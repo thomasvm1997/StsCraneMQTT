@@ -14,7 +14,7 @@ namespace Wpe.SharkCrane.Test.GantryTests
     public class GantryTest
     {
         [Fact]
-        public void CreateGantryObject_WithValidParameters_ReturnsSpreaderObjectWithCorrectProperties()
+        public void CreateGantryObject_WithValidParameters_ReturnsGantryObjectWithCorrectProperties()
         {
             // Arrange
             double distance = 5d;
@@ -29,7 +29,7 @@ namespace Wpe.SharkCrane.Test.GantryTests
         }
 
         [Fact]
-        public void CreateGantryObject_WithLengthLowerThanMinimum_ReturnsSpreaderObjectWithCorrectedProperties()
+        public void CreateGantryObject_WithLengthLowerThanMinimum_ReturnsGantryObjectWithCorrectedProperties()
         {
             // Arrange
             double distance = -5d;
@@ -43,7 +43,7 @@ namespace Wpe.SharkCrane.Test.GantryTests
         }
 
         [Fact]
-        public void CreateGantryObject_WithLengthHighterThanMaximum_ReturnsSpreaderObjectWithCorrectedProperties()
+        public void CreateGantryObject_WithLengthHighterThanMaximum_ReturnsGantryObjectWithCorrectedProperties()
         {
             // Arrange
             double distance = 102d;
