@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using Wpe.SharkCrane.Core.Models;
 using Wpe.SharkCrane.Core.Models.CustomEventArgs;
 using Wpe.SharkCrane.Core.Services.HiveService.Interfaces;
+using Wpe.SharkCrane.Core.Services.HoistService.HoistRoute;
 using Wpe.SharkCrane.Core.Services.TrolleyService.Interfaces;
+using Wpe.SharkCrane.Core.Services.TrolleyService.TrolleyRoute;
 
 namespace Wpe.SharkCrane.Core.Services.TrolleyService
 {
@@ -52,7 +54,43 @@ namespace Wpe.SharkCrane.Core.Services.TrolleyService
 
         public BaseResultModel ChangeMainProperties(Trolley trolleyMessage, string topic)
         {
-            throw new NotImplementedException();
+            if (trolleyMessage != null)
+            {
+
+                switch (topic)
+                {
+
+                    case TrolleyRoutes.SubscribeForward:
+                        StorageTrolley.Increment += trolleyMessage.Increment;
+                        StorageTrolley.Distance += StorageTrolley.Increment;
+                        StorageTrolley.TrolleyMovement = trolleyMessage.TrolleyMovement;
+                        publishTopic = TrolleyRoutes.PublishLocation;
+                        return new BaseResultModel { IsSuccess = true };
+
+
+                    case TrolleyRoutes.SubscribeBackward:
+                        StorageTrolley.Increment += trolleyMessage.Increment;
+                        StorageTrolley.Distance -= StorageTrolley.Increment;
+                        StorageTrolley.TrolleyMovement = trolleyMessage.TrolleyMovement;
+                        publishTopic = TrolleyRoutes.PublishLocation;
+                        return new BaseResultModel { IsSuccess = true };
+
+                    case TrolleyRoutes.SubscribeNeutral:
+                        StorageTrolley.TrolleyMovement = trolleyMessage.TrolleyMovement;
+                        StorageTrolley.Increment = 0;
+                        publishTopic = "";
+                        return new BaseResultModel { IsSuccess = true };
+
+                    default:
+                        var list = new List<string> { $"{topic} is not recognized" };
+                        return new BaseResultModel { IsSuccess = false, Errors = list };
+                }
+            }
+            else
+            {
+                var list = new List<string> { "Could not serialize received Trolley object" };
+                return new BaseResultModel { IsSuccess = false, Errors = list };
+            }
         }
     }
 }

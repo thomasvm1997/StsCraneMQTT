@@ -11,8 +11,8 @@ namespace Wpe.SharkCrane.Core.Services.TrolleyService.TrolleyRoute
         #region Subscribe
         public const string BaseSubscribe = "/hub/trolley";
         public const string BaseSubscribeWildcard = "/hub/trolley/#";
-        public const string SubscribeUp = BaseSubscribe + "/forward";
-        public const string SubscribeDown = BaseSubscribe + "/backward";
+        public const string SubscribeForward = BaseSubscribe + "/forward";
+        public const string SubscribeBackward = BaseSubscribe + "/backward";
         public const string SubscribeNeutral = BaseSubscribe + "/neutral";
 
         #endregion

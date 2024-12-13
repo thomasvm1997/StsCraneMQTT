@@ -31,7 +31,7 @@ namespace Wpe.SharkCrane.Core.Models
             }
 		}
 
-		HoistMovement HoistMovement { get; set; } = HoistMovement.Neutral;
+		public TrolleyMovement TrolleyMovement { get; set; } = TrolleyMovement.Neutral;
 
 	}
 }
