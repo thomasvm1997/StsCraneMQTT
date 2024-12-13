@@ -37,9 +37,13 @@ namespace Wpe.SharkCrane.Core.Services.GantryService
             string mainsString = JsonSerializer.Serialize(StorageGantry);
 
 
-            if (result.IsSuccess == true)
+            if (result.IsSuccess == true && !String.IsNullOrEmpty(publishTopic))
             {
                 await _hiveMQService.PublishServiceAsync(publishTopic, mainsString);
+            }
+            else if (String.IsNullOrEmpty(publishTopic)) //In neutraal zetten we de publishTopic op null
+            {
+                Console.WriteLine("IN NEUTRAL MODE");
             }
             else
             {
