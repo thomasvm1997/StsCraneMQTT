@@ -57,7 +57,7 @@ namespace Wpe.SharkCrane.Core.Services.GantryService
 
                     case GantryRoutes.SubscribeRight:
                         StorageGantry.Increment += gantryMessage.Increment;
-                        StorageGantry.Distance += StorageGantry.Distance;
+                        StorageGantry.Distance += StorageGantry.Increment;
                         StorageGantry.GantryMovement = gantryMessage.GantryMovement;
                         publishTopic = GantryRoutes.PublishLocation;
                         return new BaseResultModel { IsSuccess = true };

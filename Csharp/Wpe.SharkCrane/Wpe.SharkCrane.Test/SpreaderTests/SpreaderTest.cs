@@ -99,7 +99,8 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             
             var spreader = new Spreader { Increment = 0.2d };
             spreaderService.StorageSpreader.Width = 10d;
-            var expectedValue = spreaderService.StorageSpreader.Width - spreader.Increment;
+            var calculatedWidth = spreaderService.StorageSpreader.Width - spreader.Increment;
+            var expectedValue = calculatedWidth <= 0 ? 0 : calculatedWidth;
             const string topic = SpreaderRoutes.SubscribeClose;
 
             // Act
