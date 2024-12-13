@@ -39,6 +39,11 @@ class SpreaderMovement(Enum):
     CLOSE = 2
     NEUTRAL = 0
 
+class HoistMovement(Enum):
+    NEUTRAL = 0
+    UP = 1
+    DOWN = 2
+
 class BaseCraneObject:
     def __init__(self):
         self._increment = 0.2  # Default value
@@ -75,6 +80,26 @@ class Spreader(BaseCraneObject):
             self._width = 6.06
         else:
             self._width = value
+
+
+class Hoist(BaseCraneObject):
+    def __init__(self):
+        super().__init__()
+        self._length = 0  # Default hoist length
+        self.hoist_movement = HoistMovement.NEUTRAL  # Default hoist movement (neutral)
+
+    @property
+    def length(self):
+        return self._length
+
+    @length.setter
+    def length(self, value):
+        if value <= 0:
+            self._length = 0
+        elif value >= 100:
+            self._length = 100
+        else:
+            self._length = value
 
 
 # List of topics the Hub subscribes to
@@ -137,7 +162,6 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
     print(f"Subscribed: mid={mid}, qos={granted_qos}")
 
 # Callback for receiving messages
-# Callback for receiving messages
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {msg.payload.decode()}")
 
@@ -164,7 +188,6 @@ def on_message(client, userdata, msg):
                         # Persist the locked state in memory
                         hub_spreader.is_locked = True
                         print("Spreader is locked.")
-
                     else:
                         print("Spreader is already locked, no action taken.")
                     
@@ -208,13 +231,48 @@ def on_message(client, userdata, msg):
                 if publish_topic:
                     client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
                     print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
+            
+            # Handle hoist actions (up/down/neutral)
+            elif component == "hoist":
+                if state == "up":
+                    # Move hoist up
+                    hoist_movement = HoistMovement.UP
+                    payload_data = {
+                        "Increment": 0.2,
+                        "HoistMovement": hoist_movement.value,
+                        "movement": "up"
+                    }
+                    print("Hoist moving UP.")
+                elif state == "down":
+                    # Move hoist down
+                    hoist_movement = HoistMovement.DOWN
+                    payload_data = {
+                        "Increment": 0.2,
+                        "HoistMovement": hoist_movement.value,
+                        "movement": "down"
+                    }
+                    print("Hoist moving DOWN.")
+                else:
+                    # Neutral position (stop the hoist)
+                    hoist_movement = HoistMovement.NEUTRAL
+                    payload_data = {
+                        "Increment": 0.2,
+                        "HoistMovement": hoist_movement.value,
+                        "movement": "neutral"
+                    }
+                    print("Hoist is in NEUTRAL.")
+
+                # Publish the payload to the correct topic
+                publish_topic = PUBLISH_TOPICS.get(msg.topic)
+                if publish_topic:
+                    client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
+                    print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
+
             else:
-                # For other components (gantry, hoist, etc.)
+                # Handle other components like gantry, trolley, etc.
                 action_enum = None
                 if component == "gantry":
                     action_enum = GantryAction
-                elif component == "hoist":
-                    action_enum = HoistAction
                 elif component == "trolley":
                     action_enum = TrolleyAction
                 elif component == "handbrake":
@@ -245,8 +303,9 @@ client.on_publish = on_publish
 client.on_subscribe = on_subscribe
 client.on_message = on_message
 
-# Create a Spreader instance to track the lock state
+# Create instances to track the spreader and hoist states
 hub_spreader = Spreader()
+hub_hoist = Hoist()
 
 # Set TLS configuration
 client.tls_set_context(ssl.create_default_context())
