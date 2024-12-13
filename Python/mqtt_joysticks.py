@@ -1,7 +1,7 @@
 import time
+import json
 import paho.mqtt.client as paho
 import keyboard
-import json
 
 # Topics for joystick actions
 JOYSTICK_TOPICS = {
@@ -21,7 +21,12 @@ JOYSTICK_TOPICS = {
     "spreader_open": "/joysticks/spreader/open",
     "spreader_close": "/joysticks/spreader/close",
     "spreader_neutral": "/joysticks/spreader/neutral",
+    "spreader_lock": "/joysticks/spreader/lock",    # New topic for spreader lock
+    "spreader_unlock": "/joysticks/spreader/unlock",  # New topic for spreader unlock
 }
+
+# Persistent state for the spreader lock
+spreader_lock_state = "unlock"  # Start with the spreader in the unlocked state
 
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
@@ -36,13 +41,15 @@ def on_publish(client, userdata, mid, properties=None):
 
 # Function to send joystick states
 def send_joystick_states(client):
+    global spreader_lock_state  # Declare this as global at the start of the function
+
     joystick_states = {
         "gantry": "neutral",
         "hoist": "neutral",
         "trolley": "neutral",
         "handbrake": "release",
         "emergency": "unlock",
-        "spreader": "neutral"
+        "spreader": "neutral",
     }
 
     # Gantry input
@@ -74,6 +81,12 @@ def send_joystick_states(client):
         joystick_states["spreader"] = "open"
     elif keyboard.is_pressed('c'):
         joystick_states["spreader"] = "close"
+    elif keyboard.is_pressed('l'):
+        joystick_states["spreader"] = "neutral"
+        spreader_lock_state = "lock"  # Lock the spreader
+    elif keyboard.is_pressed('u'):
+        joystick_states["spreader"] = "neutral"
+        spreader_lock_state = "unlock"  # Unlock the spreader
     else:
         joystick_states["spreader"] = "neutral"
 
@@ -89,7 +102,25 @@ def send_joystick_states(client):
     else:
         joystick_states["emergency"] = "unlock"
 
-    # Publish each state and print the result
+    # Handle spreader lock/unlock state separately
+    spreader_topic = None
+    spreader_payload = None
+    if spreader_lock_state == "lock":
+        spreader_topic = JOYSTICK_TOPICS["spreader_lock"]
+        spreader_payload = json.dumps({"component": "spreader", "state": "lock"})
+    elif spreader_lock_state == "unlock":
+        spreader_topic = JOYSTICK_TOPICS["spreader_unlock"]
+        spreader_payload = json.dumps({"component": "spreader", "state": "unlock"})
+    else:
+        spreader_topic = JOYSTICK_TOPICS["spreader_neutral"]
+        spreader_payload = json.dumps({"component": "spreader", "state": "neutral"})
+
+    # Publish spreader lock/unlock state
+    if spreader_topic:
+        client.publish(spreader_topic, spreader_payload, qos=1)
+        print(f"Published to {spreader_topic}: {spreader_payload}")
+
+    # Publish all other joystick states
     for component, state in joystick_states.items():
         if component == "spreader":
             if state == "open":
@@ -104,7 +135,7 @@ def send_joystick_states(client):
         else:
             topic = JOYSTICK_TOPICS.get(f"{component}_{state}")
             payload = json.dumps({"component": component, "state": state})
-        
+
         if topic:
             client.publish(topic, payload, qos=1)
             print(f"Published to {topic}: {payload}")

@@ -95,6 +95,8 @@ SUBSCRIPTIONS = [
     "/joysticks/spreader/open",
     "/joysticks/spreader/close",
     "/joysticks/spreader/neutral",
+    "/joysticks/spreader/lock",   # New topic for lock
+    "/joysticks/spreader/unlock"   # New topic for unlock
 ]
 
 # Map incoming topics to their corresponding Hub publication topics
@@ -115,6 +117,8 @@ PUBLISH_TOPICS = {
     "/joysticks/spreader/open": "/hub/spreader/open",
     "/joysticks/spreader/close": "/hub/spreader/close",
     "/joysticks/spreader/neutral": "/hub/spreader/neutral",
+    "/joysticks/spreader/lock": "/hub/spreader/lock",   # Handle lock
+    "/joysticks/spreader/unlock": "/hub/spreader/unlock"   # Handle unlock
 }
 
 # Callback for successful connection
@@ -133,9 +137,10 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
     print(f"Subscribed: mid={mid}, qos={granted_qos}")
 
 # Callback for receiving messages
+# Callback for receiving messages
 def on_message(client, userdata, msg):
     print(f"Received message on topic {msg.topic}: {msg.payload.decode()}")
-    
+
     try:
         payload = json.loads(msg.payload)
         component = payload.get('component')
@@ -144,74 +149,94 @@ def on_message(client, userdata, msg):
         if component and state is not None:
             print(f"Processed action: {component} -> {state}")
 
-            # Map the state to the correct IntEnum class
-            action_enum = None
-            if component == "gantry":
-                action_enum = GantryAction
-            elif component == "hoist":
-                action_enum = HoistAction
-            elif component == "trolley":
-                action_enum = TrolleyAction
-            elif component == "spreader":
-                action_enum = SpreaderAction
-            elif component == "handbrake":
-                action_enum = HandbrakeAction
-            elif component == "emergency":
-                action_enum = EmergencyAction
-
-            if action_enum:
-                # Convert the state to the corresponding IntEnum value
-                try:
-                    # Update spreader handling with correct movement value for open/close
-                    if component == "spreader":
-                        if state.lower() == "open":
-                            spreader_movement = SpreaderMovement.OPEN
-                            movement_value = "right"
-                        elif state.lower() == "close":
-                            spreader_movement = SpreaderMovement.CLOSE
-                            movement_value = "left"
-                        else:
-                            spreader_movement = SpreaderMovement.NEUTRAL
-                            movement_value = "neutral"
-                        
-                        # Create a dictionary for the payload
+            # Handle spreader lock/unlock separately
+            if component == "spreader":
+                if state == "lock":
+                    # Lock the spreader and persist the lock state
+                    if not hub_spreader.is_locked:  # Only lock if it's not already locked
+                        spreader_movement = SpreaderMovement.NEUTRAL
                         payload_data = {
                             "Increment": 0.2,  # Always include increment value
-                            "IsLocked": True,  
-                            "SpreaderMovement": spreader_movement.value,  # Enum value (OPEN = 0, CLOSE = 1, NEUTRAL = 2)
-                            "movement": movement_value  # Movement direction (right/left/neutral)
+                            "IsLocked": True,   # Lock the spreader
+                            "SpreaderMovement": spreader_movement.value,
+                            "movement": "neutral"
                         }
-
-                        # Publish the payload to the spreader topic
-                        publish_topic = PUBLISH_TOPICS.get(msg.topic)
-                        if publish_topic:
-                            client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
-                            print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
+                        # Persist the locked state in memory
+                        hub_spreader.is_locked = True
+                        print("Spreader is locked.")
 
                     else:
-                        # For other states, just forward the integer value as normal
-                        int_value = action_enum[state.upper()].value
+                        print("Spreader is already locked, no action taken.")
+                    
+                elif state == "unlock":
+                    # Unlock the spreader and persist the unlock state
+                    if hub_spreader.is_locked:  # Only unlock if it's already locked
+                        spreader_movement = SpreaderMovement.NEUTRAL
                         payload_data = {
-                            "increment": 0.2,  # Always include increment value
-                            "is_locked": False,  # Always include is_locked value
-                            "state": int_value
+                            "Increment": 0.2,  # Always include increment value
+                            "IsLocked": False,  # Unlock the spreader
+                            "SpreaderMovement": spreader_movement.value,
+                            "movement": "neutral"
                         }
-                        publish_topic = PUBLISH_TOPICS.get(msg.topic)
-                        if publish_topic:
-                            client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
-                            print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
-                        else:
-                            print(f"Invalid topic: {msg.topic}")
-                except KeyError:
-                    print(f"Invalid state {state} for component {component}")
-            else:
-                print(f"Unknown component: {component}")
+                        # Persist the unlocked state in memory
+                        hub_spreader.is_locked = False
+                        print("Spreader is unlocked.")
+                    else:
+                        print("Spreader is already unlocked, no action taken.")
+                
+                else:
+                    # Handle other spreader movements (open/close)
+                    if state.lower() == "open":
+                        spreader_movement = SpreaderMovement.OPEN
+                        movement_value = "right"
+                    elif state.lower() == "close":
+                        spreader_movement = SpreaderMovement.CLOSE
+                        movement_value = "left"
+                    else:
+                        spreader_movement = SpreaderMovement.NEUTRAL
+                        movement_value = "neutral"
 
-        else:
-            print(f"Invalid payload received: {msg.payload.decode()}")
+                    payload_data = {
+                        "Increment": 0.2,
+                        "IsLocked": hub_spreader.is_locked,  # Keep lock state persistent
+                        "SpreaderMovement": spreader_movement.value,
+                        "movement": movement_value
+                    }
+
+                # Publish the payload to the correct topic
+                publish_topic = PUBLISH_TOPICS.get(msg.topic)
+                if publish_topic:
+                    client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
+                    print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
+            else:
+                # For other components (gantry, hoist, etc.)
+                action_enum = None
+                if component == "gantry":
+                    action_enum = GantryAction
+                elif component == "hoist":
+                    action_enum = HoistAction
+                elif component == "trolley":
+                    action_enum = TrolleyAction
+                elif component == "handbrake":
+                    action_enum = HandbrakeAction
+                elif component == "emergency":
+                    action_enum = EmergencyAction
+
+                if action_enum:
+                    int_value = action_enum[state.upper()].value
+                    payload_data = {
+                        "increment": 0.2,  # Always include increment value
+                        "is_locked": hub_spreader.is_locked,  # Always include is_locked value
+                        "state": int_value
+                    }
+                    publish_topic = PUBLISH_TOPICS.get(msg.topic)
+                    if publish_topic:
+                        client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
+                        print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
 
     except Exception as e:
         print(f"Error: {str(e)}")
+
 
 # Initialize MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
@@ -219,6 +244,9 @@ client.on_connect = on_connect
 client.on_publish = on_publish
 client.on_subscribe = on_subscribe
 client.on_message = on_message
+
+# Create a Spreader instance to track the lock state
+hub_spreader = Spreader()
 
 # Set TLS configuration
 client.tls_set_context(ssl.create_default_context())
