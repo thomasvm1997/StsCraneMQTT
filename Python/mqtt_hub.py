@@ -35,9 +35,9 @@ class EmergencyAction(IntEnum):
 
 # Define the SpreaderMovement Enum and Spreader class
 class SpreaderMovement(Enum):
-    OPEN = 0
-    CLOSE = 1
-    NEUTRAL = 2
+    OPEN = 1
+    CLOSE = 2
+    NEUTRAL = 0
 
 class BaseCraneObject:
     def __init__(self):
@@ -162,34 +162,44 @@ def on_message(client, userdata, msg):
             if action_enum:
                 # Convert the state to the corresponding IntEnum value
                 try:
-                    int_value = action_enum[state.upper()].value  # Ensure state is converted to the corresponding enum
-                    # If it's the spreader and movement is neutral, send the custom payload
-                    if component == "spreader" and state.lower() == "neutral":
-                        spreader = Spreader()  
-                        spreader.increment = 0.2
-                        spreader.width = 6.06 
-                        spreader.spreader_movement = SpreaderMovement.NEUTRAL  # Neutral state
-                        spreader.is_locked = False  # Lock state
-
+                    # Update spreader handling with correct movement value for open/close
+                    if component == "spreader":
+                        if state.lower() == "open":
+                            spreader_movement = SpreaderMovement.OPEN
+                            movement_value = "right"
+                        elif state.lower() == "close":
+                            spreader_movement = SpreaderMovement.CLOSE
+                            movement_value = "left"
+                        else:
+                            spreader_movement = SpreaderMovement.NEUTRAL
+                            movement_value = "neutral"
+                        
                         # Create a dictionary for the payload
                         payload_data = {
-                            "increment": spreader.increment,
-                            "width": spreader.width,
-                            "spreader_movement": spreader.spreader_movement.value,  # Enum value (NEUTRAL = 2)
-                            "is_locked": spreader.is_locked
+                            "Increment": 0.2,  # Always include increment value
+                            "IsLocked": True,  
+                            "SpreaderMovement": spreader_movement.value,  # Enum value (OPEN = 0, CLOSE = 1, NEUTRAL = 2)
+                            "movement": movement_value  # Movement direction (right/left/neutral)
                         }
 
-                        # Publish the payload to the spreader neutral topic
-                        publish_topic = PUBLISH_TOPICS.get("/joysticks/spreader/neutral")
+                        # Publish the payload to the spreader topic
+                        publish_topic = PUBLISH_TOPICS.get(msg.topic)
                         if publish_topic:
                             client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
                             print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
+
                     else:
                         # For other states, just forward the integer value as normal
+                        int_value = action_enum[state.upper()].value
+                        payload_data = {
+                            "increment": 0.2,  # Always include increment value
+                            "is_locked": False,  # Always include is_locked value
+                            "state": int_value
+                        }
                         publish_topic = PUBLISH_TOPICS.get(msg.topic)
                         if publish_topic:
-                            client.publish(publish_topic, payload=json.dumps(int_value), qos=1)
-                            print(f"Forwarded to {publish_topic} with payload: {int_value}")
+                            client.publish(publish_topic, payload=json.dumps(payload_data), qos=1)
+                            print(f"Forwarded to {publish_topic} with payload: {json.dumps(payload_data)}")
                         else:
                             print(f"Invalid topic: {msg.topic}")
                 except KeyError:
