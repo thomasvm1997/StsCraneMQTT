@@ -92,7 +92,7 @@ namespace Wpe.SharkCrane.Core.Services.SpreaderService
                         StorageSpreader.SpreaderMovement = spreaderMessage.SpreaderMovement;
                         StorageSpreader.Increment = 0;
                         publishTopic = "";
-                        return new BaseResultModel { IsSuccess = false };
+                        return new BaseResultModel { IsSuccess = true };
 
                     default:
                         var list = new List<string> { $"{topic} is not recognized" };

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Wpe.SharkCrane.Core.Models.Enums;
 
 namespace Wpe.SharkCrane.Core.Models
 {
@@ -18,6 +19,10 @@ namespace Wpe.SharkCrane.Core.Models
                 {
                     distance = 0;
                 }
+                else if(value >= 100)
+                {
+                    distance = 100;
+                }
                 else
                 {
                     distance = value;
@@ -25,5 +30,7 @@ namespace Wpe.SharkCrane.Core.Models
             }
         }
         public bool IsHandBrakeOn {  get; set; } 
+
+        public GantryMovement GantryMovement { get; set; } = GantryMovement.Neutral;
     }
 }

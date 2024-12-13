@@ -66,7 +66,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
             var hoist = new Hoist { Increment = 0.2d };
             hoistService.StorageHoist.Length = 10d;
             var calculatedValue = hoistService.StorageHoist.Length - hoist.Increment;
-            var expectedValue = calculatedValue <= 0 ? 0 : calculatedValue;
+            var expectedValue = calculatedValue >= 100d ? 100d : calculatedValue;
 
             const string topic = HoistRoutes.SubscribeUp;
 
