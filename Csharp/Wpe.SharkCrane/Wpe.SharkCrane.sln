@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.SpreaderClient.Console"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Wpe.GantryClient.Console", "Wpe.GantryClient.Console\Wpe.GantryClient.Console.csproj", "{BAF147D5-45FD-44C5-9954-0D646AF9E677}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wpe.TrolleyClient.Console", "Wpe.TrolleyClient.Console\Wpe.TrolleyClient.Console.csproj", "{EE82D8BC-AB55-4A6D-91D9-E037AE401B94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{BAF147D5-45FD-44C5-9954-0D646AF9E677}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BAF147D5-45FD-44C5-9954-0D646AF9E677}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAF147D5-45FD-44C5-9954-0D646AF9E677}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE82D8BC-AB55-4A6D-91D9-E037AE401B94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE82D8BC-AB55-4A6D-91D9-E037AE401B94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE82D8BC-AB55-4A6D-91D9-E037AE401B94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE82D8BC-AB55-4A6D-91D9-E037AE401B94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -49,6 +55,7 @@ Global
 		{C171EC2E-8A15-4DF9-9CA5-FCFB9CAE8874} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
 		{AC939F6E-6FC6-4CF4-9C93-0F38FDBAB31F} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
 		{BAF147D5-45FD-44C5-9954-0D646AF9E677} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
+		{EE82D8BC-AB55-4A6D-91D9-E037AE401B94} = {649022E7-34C2-4CBA-A33C-2E70584CCC47}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EE7D1DA8-F0DC-4C2B-8420-4EACADC3A3AC}
