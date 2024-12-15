@@ -35,8 +35,7 @@ MQTT_TOPICS = [
     "/hub/gantry/location",
     "/hub/hoist/location",
     "/hub/trolley/location",
-    "/hub/spreader/widen",
-    "/hub/spreader/narrow",
+    "/hub/spreader/status",
     "/hub/spreader/lock",
     "/hub/spreader/unlock",
 ]
@@ -143,11 +142,38 @@ try:
 
         # --- TOP RIGHT SECTION ---
         pygame.draw.rect(screen, BLACK, (TOP_LEFT_WIDTH, 0, TOP_RIGHT_WIDTH, TOP_SECTION_HEIGHT))
-        y_offset = 10
-        for topic, message in data_dict.items():
-            text_surface = FONT.render(f"{topic}: {message}", True, WHITE)
-            screen.blit(text_surface, (TOP_LEFT_WIDTH + 10, y_offset))
-            y_offset += 40
+        y_offset = 10  # Start hoogte in de rechterbovenhoek
+
+        # Display handbrake status
+        handbrake_status = "Locked" if handbrake_locked else "Released"
+        text_surface = FONT.render(f"Handbrake: {handbrake_status}", True, WHITE)
+        screen.blit(text_surface, (TOP_LEFT_WIDTH + 10, y_offset))
+        y_offset += 40
+
+        # Display gantry location
+        gantry_location = data_dict.get("/hub/gantry/location", {"x": "N/A"})
+        text_surface = FONT.render(f"Gantry: {gantry_location}", True, WHITE)
+        screen.blit(text_surface, (TOP_LEFT_WIDTH + 10, y_offset))
+        y_offset += 40
+
+        # Display trolley location
+        trolley_location = data_dict.get("/hub/trolley/location", {"x": "N/A"})
+        text_surface = FONT.render(f"Trolley: {trolley_location}", True, WHITE)
+        screen.blit(text_surface, (TOP_LEFT_WIDTH + 10, y_offset))
+        y_offset += 40
+
+        # Display hoist location
+        hoist_location = data_dict.get("/hub/hoist/location", {"y": "N/A"})
+        text_surface = FONT.render(f"Hoist: {hoist_location}", True, WHITE)
+        screen.blit(text_surface, (TOP_LEFT_WIDTH + 10, y_offset))
+        y_offset += 40
+
+        # Display spreader lock status
+        spreader_status = "Locked" if spreader_locked else "Unlocked"
+        text_surface = FONT.render(f"Spreader Lock: {spreader_status}", True, WHITE)
+        screen.blit(text_surface, (TOP_LEFT_WIDTH + 10, y_offset))
+        y_offset += 40
+
 
         # --- BOTTOM SECTION ---
         # Step 1: Render the sky background first
