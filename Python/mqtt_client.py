@@ -20,8 +20,8 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 LIGHT_BLUE = (173, 216, 230)
 
-# Font
-FONT = pygame.font.Font(None, 36)
+# Font (gehalveerd)
+FONT = pygame.font.Font(None, 18)
 
 # Dot sizes
 DOT_RADIUS = 5
@@ -162,6 +162,17 @@ try:
         blue_label_x = (blue_line_start_x + blue_line_end_x) // 2 - blue_line_label.get_width() // 2
         blue_label_y = blue_line_y - 25  # Plaats de tekst boven de lijn
         screen.blit(blue_line_label, (blue_label_x, blue_label_y))
+        
+        # Nieuwe lijn van boven naar beneden aan de linkerzijde
+        line_start_y = LINE_FIXED_HEIGHT
+        line_end_y = TOP_SECTION_HEIGHT - 40
+        pygame.draw.line(screen, RED, (10, line_start_y), (10, line_end_y), 2)
+        
+        # Voeg het label '60 meter' boven de lijn
+        height_label = FONT.render("60 meter", True, RED)
+        label_x = 10 + 10  
+        label_y = line_start_y + line_end_y // 2  
+        screen.blit(height_label, (label_x, label_y))
 
         # Dots and lines for top-left
         pygame.draw.circle(screen, GREEN if spreader_locked else RED, (DOT_X, DOT_Y), DOT_RADIUS)
