@@ -23,23 +23,38 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 # print message, useful for checking if it was successful
 def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload)) #message content
+    handle_mqtt_message(trolley,msg)
+
+def handle_mqtt_message(trolley,msg):
     try:
-        payload = json.loads(msg.payload.decode()) 
-        if msg.topic == "/hub/trolley":
-            if "command" in payload:
-                command = payload["command"]
-                if command == "move":
-                    direction = int(payload["direction"]) #-1 left, 1 right
-                    delta_time = time.time() - trolley.last_update #calculates time elapsed since last update
-                    trolley.move(direction, delta_time) #update position
-                elif command == "speed":
-                    trolley.set_speed(float(payload["speed"])) #sets speed
-                elif command == "stop":
-                    trolley.emergency_stop_action() #activates emergency stop
-                elif command == "release_stop":
-                    trolley.release_emergency_stop() #release emergency stop
-    except (json.JSONDecodeError, KeyError) as e:
-        print(f"Error parsing message: {e}")
+        data = json.loads(msg.payload)
+        command = data.get("command")
+
+        if command == "move":
+            direction = data.get("direction", 0)
+            trolley.move(direction)
+
+        elif command == "increment_speed":
+            trolley.increment_speed()
+
+        elif command == "stop":
+            trolley.stop()
+
+        elif command == "release_stop":
+            trolley.emergency_stop = False
+            trolley.speed = 0.2  #reset to minimum speed
+            print("Emergency stop released.")
+
+        elif command == "emergency_stop":
+            trolley.emergency_stop = True
+            trolley.direction = 0  #stop movement immediately
+            print("Emergency stop activated.")
+
+        else:
+            print("Unknown command received.")
+
+    except json.JSONDecodeError:
+        print("Invalid message format.")
 
 # using MQTT version 5 here, for 3.1.1: MQTTv311, 3.1: MQTTv31
 # userdata is user defined data of any type, updated by user_data_set()
@@ -61,8 +76,26 @@ client.on_publish = on_publish
 
 
 # a single publish, this can also be done in loops, etc.
-client.publish("/trolley", payload= "hot", qos=1)
+client.publish("/trolley/location", payload= "hot", qos=1)
 
 # loop_forever for simplicity, here you need to stop the loop manually
 # you can also use loop_start and loop_stop
-client.loop_forever()
+#client.loop_forever()
+
+# Main loop
+def main_loop():
+    last_update_time = time.time()
+
+    while True:
+        current_time = time.time()
+        delta_time = current_time - last_update_time
+
+        if not trolley.emergency_stop:
+            trolley.update_position(delta_time)
+
+        last_update_time = current_time
+        time.sleep(0.1)
+
+# Start MQTT loop and main loop
+client.loop_start()
+main_loop()
