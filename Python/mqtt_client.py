@@ -135,6 +135,33 @@ try:
         screen.blit(SKY_BACKGROUND, (0, 0))
         screen.blit(STS_IMAGE, (0, 0))
         pygame.draw.rect(screen, WHITE, (0, 0, TOP_LEFT_WIDTH, TOP_SECTION_HEIGHT), 2)
+        
+        # Tekenen van een lijn boven de kraan(breedte 70 meter)
+        ship_width_line_start = (50, 20)
+        ship_width_line_end = (TOP_LEFT_WIDTH - 50, 20)
+        pygame.draw.line(screen, BLACK, ship_width_line_start, ship_width_line_end, 2)
+
+        # Label '70 meter' boven de lijn
+        ship_width_label = FONT.render("70 meter", True, BLACK)
+        label_x = (ship_width_line_start[0] + ship_width_line_end[0]) // 2 - ship_width_label.get_width() // 2
+        label_y = ship_width_line_start[1] - 20
+        screen.blit(ship_width_label, (label_x, label_y))
+        
+        # Berekeningen voor de lijn in het blauwe vlak
+        black_box_height = 40
+        black_box_end_x = TOP_LEFT_WIDTH // 2  # Het zwarte vak neemt de eerste helft in beslag
+        blue_line_start_x = black_box_end_x + ((TOP_LEFT_WIDTH - black_box_end_x) * 0.15)  
+        blue_line_end_x = black_box_end_x + ((TOP_LEFT_WIDTH - black_box_end_x) * 0.95)  
+        blue_line_y = TOP_SECTION_HEIGHT - 10 
+
+        # Teken de lijn
+        pygame.draw.line(screen, RED, (blue_line_start_x, blue_line_y), (blue_line_end_x, blue_line_y), 2)
+
+        # Label '30 meter' bij de lijn
+        blue_line_label = FONT.render("30 meter", True, RED)
+        blue_label_x = (blue_line_start_x + blue_line_end_x) // 2 - blue_line_label.get_width() // 2
+        blue_label_y = blue_line_y - 25  # Plaats de tekst boven de lijn
+        screen.blit(blue_line_label, (blue_label_x, blue_label_y))
 
         # Dots and lines for top-left
         pygame.draw.circle(screen, GREEN if spreader_locked else RED, (DOT_X, DOT_Y), DOT_RADIUS)
