@@ -11,6 +11,7 @@ class Trolley:
         self.max_x = max_x
         self.speed = 0.2 #minimum speed m/s
         self.max_speed = 2.0 #maximum speed m/s
+        self.direction = 0 #0 = stopped, 1 = right, -1 = left
         self.emergency_stop = False
         self.last_update = time.time()
         self.last_message_time = time.time()
@@ -33,6 +34,10 @@ class Trolley:
             print(f"Speed increased to {self.speed} m/s")
         else:
             print("Maximum speed reached")
+    
+    def update_position(self, delta_time):
+        if self.direction == 0:
+            return
 
     def reset_speed(self):
         self.speed = 0.2  #reset to minimum speed

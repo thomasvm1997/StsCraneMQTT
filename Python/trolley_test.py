@@ -1,55 +1,74 @@
 import unittest
-from trolley_object import Trolley
+from unittest.mock import MagicMock
+from trolley import Trolley, handle_mqtt_message
 
 class TestTrolley(unittest.TestCase):
+    def setUp(self):
+        self.trolley = Trolley()
 
-    #create new trolley
-    def setUp(self):    
-        self.trolley = Trolley(x=100, y=300, width=50, height=20, min_x=50, max_x=750)
-
-    #test trolley position
-    def test_initial_position(self):
-        self.assertEqual(self.trolley.x, 100)
-        self.assertEqual(self.trolley.y, 300)
-        self.assertEqual(self.trolley.min_x, 50)
-        self.assertEqual(self.trolley.max_x, 750)
-
-    #test speed
-    def test_set_speed(self):
-        self.trolley.set_speed(2)
-        self.assertEqual(self.trolley.speed, 2)
-
-    #test emergency stop
-    def test_emergency_stop(self):
-        self.trolley.set_speed(2)
-        self.trolley.emergency_stop_action()
-        self.assertTrue(self.trolley.emergency_stop)
-        self.assertEqual(self.trolley.speed, 0)
-
-
-    #test if emergency stop releases correctly
-    def test_release_emergency_stop(self):
-        self.trolley.emergency_stop_action()
-        self.trolley.release_emergency_stop()
+    def test_initial_state(self):
+        self.assertEqual(self.trolley.x, 0.0)
+        self.assertEqual(self.trolley.speed, 0.2)
+        self.assertEqual(self.trolley.direction, 0)
         self.assertFalse(self.trolley.emergency_stop)
 
-    #check if trolley moves within boundaries
-    def test_movement_within_boundaries(self):
-        self.trolley.set_speed(1)
-        self.trolley.move(1, 1)  #move right for 1s
-        self.assertEqual(self.trolley.x, 101)
+    def test_move_command(self):
+        self.trolley.move(1)  # Move right
+        self.assertEqual(self.trolley.direction, 1)
+        self.trolley.move(-1)  # Move left
+        self.assertEqual(self.trolley.direction, -1)
+        self.trolley.move(0)  # Invalid direction
+        self.assertNotEqual(self.trolley.direction, 0)  # Should not change to 0
 
-        self.trolley.move(-1, 2)  #move left for 2s
-        self.assertEqual(self.trolley.x, 99)
+    def test_increment_speed(self):
+        initial_speed = self.trolley.speed
+        self.trolley.increment_speed()
+        self.assertEqual(self.trolley.speed, initial_speed + 0.2)
 
-    #check if trolley doesnt move outside boundaries
-    def test_movement_outside_boundaries(self):
-        self.trolley.set_speed(1)
-        self.trolley.move(-1, 100)  #attempt to move left beyond min_x
-        self.assertEqual(self.trolley.x, self.trolley.min_x)
+        # Simulate hitting max speed
+        for _ in range(10):  # Try increasing speed multiple times
+            self.trolley.increment_speed()
+        self.assertEqual(self.trolley.speed, self.trolley.max_speed)
 
-        self.trolley.move(1, 1000)  #attempt to move right beyond max_x
-        self.assertEqual(self.trolley.x, self.trolley.max_x)
+    def test_emergency_stop(self):
+        self.trolley.move(1)
+        self.trolley.emergency_stop = True
+        self.trolley.move(1)  # Should not move
+        self.assertEqual(self.trolley.direction, 0)
+        self.trolley.update_position(1)  # Position should not change
+        self.assertEqual(self.trolley.x, 0.0)
 
-if __name__ == "__main__":
+    def test_release_emergency_stop(self):
+        self.trolley.emergency_stop = True
+        self.trolley.move(1)  # Should not move
+        self.trolley.release_stop = False
+        self.trolley.emergency_stop = False
+        self.trolley.move(1)  # Should move now
+        self.assertEqual(self.trolley.direction, 1)
+
+    def test_handle_mqtt_message(self):
+        # Mock a move command
+        message = MagicMock()
+        message.payload = b'{"command": "move", "direction": 1}'
+        handle_mqtt_message(self.trolley, message)
+        self.assertEqual(self.trolley.direction, 1)
+
+        # Mock increment_speed command
+        message.payload = b'{"command": "increment_speed"}'
+        handle_mqtt_message(self.trolley, message)
+        self.assertGreater(self.trolley.speed, 0.2)
+
+        # Mock emergency stop command
+        message.payload = b'{"command": "emergency_stop"}'
+        handle_mqtt_message(self.trolley, message)
+        self.assertTrue(self.trolley.emergency_stop)
+        self.assertEqual(self.trolley.direction, 0)
+
+        # Mock release emergency stop command
+        message.payload = b'{"command": "release_stop"}'
+        handle_mqtt_message(self.trolley, message)
+        self.assertFalse(self.trolley.emergency_stop)
+        self.assertEqual(self.trolley.speed, 0.2)  # Reset to minimum speed
+
+if __name__ == '__main__':
     unittest.main()
