@@ -1,86 +1,171 @@
 import time
+import json
 import paho.mqtt.client as paho
-from paho import mqtt
-import keyboard  # Used to detect key presses
+import keyboard
 
-# Mapping subscription topics to their respective mapped names
-TOPIC_MAPPING = {
-    "/joystick/gantry": "/hub/joystick/gantry",
-    "/joystick/hoist": "/hub/joystick/hoist",
-    "/joystick/trolley": "/hub/joystick/trolley",
-    "/joystick/emergency-stop": "/hub/joystick/emergency-stop",
-    "/joystick/handbrake": "/hub/joystick/handbrake"
+# Topics for joystick actions
+JOYSTICK_TOPICS = {
+    "gantry_left": "/joysticks/gantry/left",
+    "gantry_right": "/joysticks/gantry/right",
+    "gantry_neutral": "/joysticks/gantry/neutral",
+    "hoist_up": "/joysticks/hoist/up",
+    "hoist_down": "/joysticks/hoist/down",
+    "hoist_neutral": "/joysticks/hoist/neutral",
+    "trolley_forward": "/joysticks/trolley/forward",
+    "trolley_backward": "/joysticks/trolley/backward",
+    "trolley_neutral": "/joysticks/trolley/neutral",
+    "handbrake_lock": "/joysticks/gantry/handbrake/lock",
+    "handbrake_release": "/joysticks/gantry/handbrake/release",
+    "emergency_lock": "/joysticks/emergency/lock",
+    "emergency_unlock": "/joysticks/emergency/unlock",
+    "spreader_open": "/joysticks/spreader/open",
+    "spreader_close": "/joysticks/spreader/close",
+    "spreader_neutral": "/joysticks/spreader/neutral",
+    "spreader_lock": "/joysticks/spreader/lock",    # New topic for spreader lock
+    "spreader_unlock": "/joysticks/spreader/unlock",  # New topic for spreader unlock
 }
+
+# Persistent state for the spreader lock
+spreader_lock_state = "unlock"  # Start with the spreader in the unlocked state
 
 # Callback for connection
 def on_connect(client, userdata, flags, rc, properties=None):
-    print("CONNACK received with code %s." % rc)
-    # Subscribe to mapped topics
-    for topic in TOPIC_MAPPING.values():
-        client.subscribe(topic, qos=1)
-        print(f"Subscribed to {topic}")
+    if rc == 0:
+        print("Connected successfully!")
+    else:
+        print(f"Failed to connect, return code: {rc}")
 
-# Callback for publish success
+# Callback for publish confirmation
 def on_publish(client, userdata, mid, properties=None):
-    print("mid: " + str(mid))
+    print(f"Message published successfully - MID: {mid}")
 
-# Callback for subscription confirmation
-def on_subscribe(client, userdata, mid, granted_qos, properties=None):
-    print("Subscribed: " + str(mid) + " " + str(granted_qos))
+# Function to send joystick states
+def send_joystick_states(client):
+    global spreader_lock_state  # Declare this as global at the start of the function
 
-# Callback for message receipt
-def on_message(client, userdata, msg):
-    print(f"Received message on topic {msg.topic}: {str(msg.payload.decode('utf-8'))}")
+    joystick_states = {
+        "gantry": "neutral",
+        "hoist": "neutral",
+        "trolley": "neutral",
+        "handbrake": "release",
+        "emergency": "unlock",
+        "spreader": "neutral",
+    }
 
-# Main method to check joystick key presses and send messages
-def check_joysticks(client):
-    print("Waiting for joystick button presses...")  # Message printed once at the start
+    # Gantry input
+    if keyboard.is_pressed('a'):
+        joystick_states["gantry"] = "left"
+    elif keyboard.is_pressed('d'):
+        joystick_states["gantry"] = "right"
+    else:
+        joystick_states["gantry"] = "neutral"
 
-    while True:
-        if keyboard.is_pressed('1'):  # Hoist joystick
-            client.publish("/joystick/hoist", payload="joystick hoist active", qos=1)
-            time.sleep(1)  # Send the message every 1 second while the key is pressed
+    # Hoist input
+    if keyboard.is_pressed('w'):
+        joystick_states["hoist"] = "up"
+    elif keyboard.is_pressed('s'):
+        joystick_states["hoist"] = "down"
+    else:
+        joystick_states["hoist"] = "neutral"
 
-        elif keyboard.is_pressed('2'):  # Trolley joystick
-            client.publish("/joystick/trolley", payload="joystick trolley active", qos=1)
-            time.sleep(1)
+    # Trolley input
+    if keyboard.is_pressed('i'):
+        joystick_states["trolley"] = "forward"
+    elif keyboard.is_pressed('k'):
+        joystick_states["trolley"] = "backward"
+    else:
+        joystick_states["trolley"] = "neutral"
 
-        elif keyboard.is_pressed('3'):  # Gantry joystick
-            client.publish("/joystick/gantry", payload="joystick gantry active", qos=1)
-            time.sleep(1)
+    # Spreader input
+    if keyboard.is_pressed('o'):
+        joystick_states["spreader"] = "open"
+    elif keyboard.is_pressed('c'):
+        joystick_states["spreader"] = "close"
+    elif keyboard.is_pressed('l'):
+        joystick_states["spreader"] = "neutral"
+        spreader_lock_state = "lock"  # Lock the spreader
+    elif keyboard.is_pressed('u'):
+        joystick_states["spreader"] = "neutral"
+        spreader_lock_state = "unlock"  # Unlock the spreader
+    else:
+        joystick_states["spreader"] = "neutral"
 
-        elif keyboard.is_pressed('4'):  # Handbrake
-            client.publish("/joystick/handbrake", payload="handbrake active", qos=1)
-            time.sleep(1)
+    # Handbrake input
+    if keyboard.is_pressed('1'):
+        joystick_states["handbrake"] = "lock"
+    else:
+        joystick_states["handbrake"] = "release"
 
-        elif keyboard.is_pressed('5'):  # Emergency stop
-            client.publish("/joystick/emergency-stop", payload="emergency stop activated", qos=1)
-            time.sleep(1)
+    # Emergency input
+    if keyboard.is_pressed('z'):
+        joystick_states["emergency"] = "lock"
+    else:
+        joystick_states["emergency"] = "unlock"
 
+    # Handle spreader lock/unlock state separately
+    spreader_topic = None
+    spreader_payload = None
+    if spreader_lock_state == "lock":
+        spreader_topic = JOYSTICK_TOPICS["spreader_lock"]
+        spreader_payload = json.dumps({"component": "spreader", "state": "lock"})
+    elif spreader_lock_state == "unlock":
+        spreader_topic = JOYSTICK_TOPICS["spreader_unlock"]
+        spreader_payload = json.dumps({"component": "spreader", "state": "unlock"})
+    else:
+        spreader_topic = JOYSTICK_TOPICS["spreader_neutral"]
+        spreader_payload = json.dumps({"component": "spreader", "state": "neutral"})
+
+    # Publish spreader lock/unlock state
+    if spreader_topic:
+        client.publish(spreader_topic, spreader_payload, qos=1)
+        print(f"Published to {spreader_topic}: {spreader_payload}")
+
+    # Publish all other joystick states
+    for component, state in joystick_states.items():
+        if component == "spreader":
+            if state == "open":
+                topic = JOYSTICK_TOPICS["spreader_open"]
+                payload = json.dumps({"component": component, "state": "open"})
+            elif state == "close":
+                topic = JOYSTICK_TOPICS["spreader_close"]
+                payload = json.dumps({"component": component, "state": "close"})
+            else:
+                topic = JOYSTICK_TOPICS["spreader_neutral"]
+                payload = json.dumps({"component": component, "state": "neutral"})
         else:
-            # No key pressed, no action
-            time.sleep(0.1)  # Sleep for a small time to avoid high CPU usage
+            topic = JOYSTICK_TOPICS.get(f"{component}_{state}")
+            payload = json.dumps({"component": component, "state": state})
 
-# Initialize the MQTT client
+        if topic:
+            client.publish(topic, payload, qos=1)
+            print(f"Published to {topic}: {payload}")
+
+# Initialize MQTT client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
-
-# Set callbacks
 client.on_connect = on_connect
 client.on_publish = on_publish
-client.on_subscribe = on_subscribe
-client.on_message = on_message
 
 # Enable TLS for secure connection
-client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
-
-# Set username and password for MQTT
+client.tls_set()
 client.username_pw_set("shark", "FishFish1")
 
-# Connect to HiveMQ broker
+# Connect to the broker
 client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 
-# Start the MQTT loop in the background
+# Start the MQTT client loop in the background
 client.loop_start()
 
-# Run the joystick check method
-check_joysticks(client)
+try:
+    print("Joystick control activated. Press 'q' to quit.")
+    while True:
+        send_joystick_states(client)
+        time.sleep(1)  # Check every second
+        if keyboard.is_pressed('q'):
+            print("Exiting joystick control...")
+            break
+except KeyboardInterrupt:
+    print("Joystick control interrupted.")
+finally:
+    client.loop_stop()
+    client.disconnect()
+    print("MQTT client disconnected.")
