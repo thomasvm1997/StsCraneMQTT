@@ -1,7 +1,7 @@
 import time
 import json
 import paho.mqtt.client as paho
-import ssl  # Import ssl module for TLS support
+import ssl  
 from enum import IntEnum, Enum
 
 # Define enumerations for actions (numeric values)
