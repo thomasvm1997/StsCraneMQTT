@@ -13,16 +13,16 @@ namespace Wpe.SharkCrane.Core.Services.GantryService.GantryRoute
         public const string BaseSubscribeWildcard = "/hub/gantry/#";
         public const string SubscribeLeft = BaseSubscribe + "/left";
         public const string SubscribeRight = BaseSubscribe + "/right";
+        public const string SubscribeNeutral = BaseSubscribe + "/neutral";
         public const string SubscribeLock = BaseSubscribe + "/handbrake/lock";
-        public const string SubscribeRelease = BaseSubscribe + "/handbrake/release";
+        public const string SubscribeUnlock = BaseSubscribe + "/handbrake/release";
 
         #endregion
         #region Publish
         public const string BasePublish = "/gantry";
-        public const string PublishLeft = BasePublish + "/left";
-        public const string PublishRight = BasePublish + "/right";
-        public const string PublishLock = BasePublish + "/handbrake/lock";
-        public const string PublishRelease = BasePublish + "/handbrake/release";
+        public const string PublishLocation = BasePublish + "/location";
+        public const string PublishLocked = BasePublish + "/locked";
+        public const string PublishUnlocked = BasePublish + "/unlocked";
         #endregion
     }
 }

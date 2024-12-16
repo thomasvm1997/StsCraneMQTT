@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Wpe.SharkCrane.Core.Models.Enums;
 
 namespace Wpe.SharkCrane.Core.Models
 {
@@ -20,12 +21,17 @@ namespace Wpe.SharkCrane.Core.Models
                 {
                     length = 0;
                 }
+                else if(value >= 100)
+                {
+                    length = 100;
+                }
                 else
                 {
                     length = value;
                 }
             }
         }
+        public HoistMovement HoistMovement { get; set; } = HoistMovement.Neutral;
         
     }
 }
