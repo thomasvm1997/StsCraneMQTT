@@ -9,7 +9,7 @@ class TestTrolley(unittest.TestCase):
 
     def setUp(self):
         """Initialize a Trolley object before each test."""
-        self.trolley = Trolley(x=100, y=300, width=50, height=20, min_x=0, max_x=500)
+        self.trolley = Trolley(x=100, width=50, height=20, min_x=0, max_x=500)
 
     def test_initial_state(self):
         """Test that the trolley initializes with default values."""

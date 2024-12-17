@@ -10,16 +10,15 @@ class TrolleyMovement(Enum):
 
 
 class Trolley:
-    def __init__(self, x, y, width, height, min_x, max_x):
+    def __init__(self, x, width, height, min_x, max_x):
         self.x = x
-        self.y = y
         self.width = width
         self.height = height
         self.min_x = min_x
         self.max_x = max_x
         self.speed = 0.2  # Set the initial speed to the minimum speed
         self.max_speed = 2.0  # Maximum speed in m/s
-        self.min_increment = 0.2  # Speed increment value
+        self.increment = 0.2  # Speed increment value
         self.direction = TrolleyMovement.NEUTRAL  # Current movement direction
         self.emergency_stop = False  # Emergency stop flag
         self.last_update = time.time()
@@ -99,4 +98,4 @@ class Trolley:
 
     def render(self, screen):
         """Render the trolley as a red rectangle on the screen."""
-        pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.width, self.height))
+        pygame.draw.rect(screen, (255, 0, 0), (self.x, self.width, self.height))
