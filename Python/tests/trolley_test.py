@@ -1,55 +1,116 @@
 import unittest
-from trolley_object import Trolley
+from unittest.mock import Mock, patch
+import json
+from trolley_object import Trolley, TrolleyMovement
+from trolley import TrolleyController
+
 
 class TestTrolley(unittest.TestCase):
 
-    #create new trolley
-    def setUp(self):    
-        self.trolley = Trolley(x=100, y=300, width=50, height=20, min_x=50, max_x=750)
+    def setUp(self):
+        """Initialize a Trolley object before each test."""
+        self.trolley = Trolley(x=100, width=50, height=20, min_x=0, max_x=500)
 
-    #test trolley position
-    def test_initial_position(self):
-        self.assertEqual(self.trolley.x, 100)
-        self.assertEqual(self.trolley.y, 300)
-        self.assertEqual(self.trolley.min_x, 50)
-        self.assertEqual(self.trolley.max_x, 750)
-
-    #test speed
-    def test_set_speed(self):
-        self.trolley.set_speed(2)
-        self.assertEqual(self.trolley.speed, 2)
-
-    #test emergency stop
-    def test_emergency_stop(self):
-        self.trolley.set_speed(2)
-        self.trolley.emergency_stop_action()
-        self.assertTrue(self.trolley.emergency_stop)
-        self.assertEqual(self.trolley.speed, 0)
-
-
-    #test if emergency stop releases correctly
-    def test_release_emergency_stop(self):
-        self.trolley.emergency_stop_action()
-        self.trolley.release_emergency_stop()
+    def test_initial_state(self):
+        """Test that the trolley initializes with default values."""
+        self.assertEqual(self.trolley.speed, 0.2)
         self.assertFalse(self.trolley.emergency_stop)
+        self.assertEqual(self.trolley.direction, TrolleyMovement.NEUTRAL)
 
-    #check if trolley moves within boundaries
-    def test_movement_within_boundaries(self):
-        self.trolley.set_speed(1)
-        self.trolley.move(1, 1)  #move right for 1s
-        self.assertEqual(self.trolley.x, 101)
+    def test_increment_speed(self):
+        """Test speed increment, ensuring it doesn't exceed max speed."""
+        for _ in range(10):  # Increment multiple times
+            self.trolley.increment_speed()
 
-        self.trolley.move(-1, 2)  #move left for 2s
-        self.assertEqual(self.trolley.x, 99)
+        self.assertEqual(self.trolley.speed, 2.0)  # Max speed
+        self.trolley.increment_speed()  # Try exceeding max speed
+        self.assertEqual(self.trolley.speed, 2.0)
 
-    #check if trolley doesnt move outside boundaries
-    def test_movement_outside_boundaries(self):
-        self.trolley.set_speed(1)
-        self.trolley.move(-1, 100)  #attempt to move left beyond min_x
-        self.assertEqual(self.trolley.x, self.trolley.min_x)
+    def test_emergency_stop(self):
+        """Test that the emergency stop sets speed to 0."""
+        self.trolley.increment_speed()
+        self.trolley.stop()
+        self.assertTrue(self.trolley.emergency_stop)
+        self.assertEqual(self.trolley.speed, 0.0)
 
-        self.trolley.move(1, 1000)  #attempt to move right beyond max_x
-        self.assertEqual(self.trolley.x, self.trolley.max_x)
+    def test_update_position_forward(self):
+        """Test that the trolley updates position correctly when moving forward."""
+        self.trolley.set_trolley_state(TrolleyMovement.FORWARD)
+        initial_x = self.trolley.x
+        self.trolley.update_position(1)  # Simulate 1 second of movement
+        self.assertEqual(self.trolley.x, initial_x + self.trolley.speed)
+
+    def test_update_position_backward(self):
+        """Test that the trolley updates position correctly when moving backward."""
+        self.trolley.set_trolley_state(TrolleyMovement.BACKWARD)
+        initial_x = self.trolley.x
+        self.trolley.update_position(1)  # Simulate 1 second of movement
+        self.assertEqual(self.trolley.x, initial_x - self.trolley.speed)
+
+    def test_update_position_no_movement(self):
+        """Test that no movement occurs when the trolley is neutral."""
+        self.trolley.set_trolley_state(TrolleyMovement.NEUTRAL)
+        initial_x = self.trolley.x
+        self.trolley.update_position(1)
+        self.assertEqual(self.trolley.x, initial_x)
+
+
+class TestTrolleyController(unittest.TestCase):
+
+    @patch('paho.mqtt.client.Client')
+    def setUp(self, MockMQTTClient):
+        """Set up a TrolleyController with a mocked MQTT client."""
+        self.mock_client = MockMQTTClient.return_value
+        self.controller = TrolleyController()
+
+    def test_on_message_forward(self):
+        """Test that the trolley moves forward when receiving a forward command."""
+        payload = json.dumps({"component": "trolley", "state": "forward"})
+        msg = Mock()
+        msg.payload = payload.encode()
+
+        self.controller.on_message(self.mock_client, None, msg)
+        self.assertEqual(self.controller.trolley.direction, TrolleyMovement.FORWARD)
+
+    def test_on_message_backward(self):
+        """Test that the trolley moves backward when receiving a backward command."""
+        payload = json.dumps({"component": "trolley", "state": "backward"})
+        msg = Mock()
+        msg.payload = payload.encode()
+
+        self.controller.on_message(self.mock_client, None, msg)
+        self.assertEqual(self.controller.trolley.direction, TrolleyMovement.BACKWARD)
+
+    def test_on_message_increment_speed(self):
+        """Test that increment_speed increases trolley speed."""
+        payload = json.dumps({"command": "increment_speed"})
+        msg = Mock()
+        msg.payload = payload.encode()
+
+        self.controller.on_message(self.mock_client, None, msg)
+        self.assertEqual(self.controller.trolley.speed, 0.4)  # Default increment is 0.2
+
+    def test_on_message_emergency_stop(self):
+        """Test that the trolley activates emergency stop."""
+        payload = json.dumps({"command": "emergency_stop"})
+        msg = Mock()
+        msg.payload = payload.encode()
+
+        self.controller.on_message(self.mock_client, None, msg)
+        self.assertTrue(self.controller.trolley.emergency_stop)
+        self.assertEqual(self.controller.trolley.speed, 0.0)
+
+    def test_on_message_release_stop(self):
+        """Test that the trolley releases emergency stop and resets speed."""
+        self.controller.trolley.emergency_stop = True  # Simulate emergency stop active
+        payload = json.dumps({"command": "release_stop"})
+        msg = Mock()
+        msg.payload = payload.encode()
+
+        self.controller.on_message(self.mock_client, None, msg)
+        self.assertFalse(self.controller.trolley.emergency_stop)
+        self.assertEqual(self.controller.trolley.speed, 0.2)  # Reset to minimum speed
+
 
 if __name__ == "__main__":
     unittest.main()
