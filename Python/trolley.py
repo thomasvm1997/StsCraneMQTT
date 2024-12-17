@@ -2,100 +2,109 @@ import time
 import json
 import paho.mqtt.client as paho
 from paho import mqtt
-from trolley_object import Trolley
-
-trolley = Trolley(x=100, y=300, width=50, height=20, min_x=50, max_x=750)
-
-# setting callbacks for different events to see if it works, print the message etc.
-def on_connect(client, userdata, flags, rc, properties=None):
-    print("CONNACK received with code %s." % rc)
-    client.subscribe("/hub/trolley", qos=1)
-    print("Subscribed to hub/trolley")
-
-# with this callback you can see if your publish was successful
-def on_publish(client, userdata, mid, properties=None):
-    print("mid: " + str(mid))
-
-# print which topic was subscribed to
-def on_subscribe(client, userdata, mid, granted_qos, properties=None):
-    print("Subscribed: " + str(mid) + " " + str(granted_qos))
-
-# print message, useful for checking if it was successful
-def on_message(client, userdata, msg):
-    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload)) #message content
-    handle_mqtt_message(trolley,msg)
-
-def handle_mqtt_message(trolley,msg):
-    try:
-        data = json.loads(msg.payload)
-        command = data.get("command")
-
-        if command == "move":
-            direction = data.get("direction", 0)
-            trolley.move(direction)
-
-        elif command == "increment_speed":
-            trolley.increment_speed()
-
-        elif command == "stop":
-            trolley.stop()
-
-        elif command == "release_stop":
-            trolley.emergency_stop = False
-            trolley.speed = 0.2  #reset to minimum speed
-            print("Emergency stop released.")
-
-        elif command == "emergency_stop":
-            trolley.emergency_stop = True
-            trolley.direction = 0  #stop movement immediately
-            print("Emergency stop activated.")
-
-        else:
-            print("Unknown command received.")
-
-    except json.JSONDecodeError:
-        print("Invalid message format.")
-
-# using MQTT version 5 here, for 3.1.1: MQTTv311, 3.1: MQTTv31
-# userdata is user defined data of any type, updated by user_data_set()
-# client_id is the given name of the client
-client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
-client.on_connect = on_connect
-
-# enable TLS for secure connection
-client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
-# set username and password
-client.username_pw_set("shark", "FishFish1")
-# connect to HiveMQ Cloud on port 8883 (default for MQTT)
-client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
-
-# setting callbacks, use separate functions like above for better visibility
-client.on_subscribe = on_subscribe
-client.on_message = on_message
-client.on_publish = on_publish
+from trolley_object import Trolley, TrolleyMovement
 
 
-# a single publish, this can also be done in loops, etc.
-client.publish("/trolley/location", payload= "hot", qos=1)
+class TrolleyController:
+    def __init__(self):
+        """Initialize TrolleyController and set up MQTT client."""
+        self.trolley = Trolley(x=100, y=300, width=50, height=20, min_x=0, max_x=500)
+        self.running = True
 
-# loop_forever for simplicity, here you need to stop the loop manually
-# you can also use loop_start and loop_stop
-#client.loop_forever()
+        # Initialize MQTT client
+        self.client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+        self.client.on_subscribe = self.on_subscribe
+        self.client.on_publish = self.on_publish
 
-# Main loop
-def main_loop():
-    last_update_time = time.time()
+        # Set TLS for secure connection
+        self.client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+        self.client.username_pw_set("shark", "FishFish1")
+        self.client.connect("4f123f803b6548d08e7004b574274936.s1.eu.hivemq.cloud", 8883)
 
-    while True:
-        current_time = time.time()
-        delta_time = current_time - last_update_time
+    # MQTT Callbacks
+    def on_connect(self, client, userdata, flags, rc, properties=None):
+        """Callback for when the MQTT client connects to the broker."""
+        print(f"Connected to MQTT broker with code {rc}.")
+        client.subscribe("/hub/trolley", qos=1)
+        print("Subscribed to /hub/trolley")
 
-        if not trolley.emergency_stop:
-            trolley.update_position(delta_time)
+    def on_message(self, client, userdata, msg):
+        """Callback for receiving messages on subscribed topics."""
+        print(f"Message received: {msg.topic} {msg.payload}")
+        try:
+            payload = json.loads(msg.payload)
+            component = payload.get("component", "")
+            state = payload.get("state", "")
+            command = payload.get("command", "")
 
-        last_update_time = current_time
-        time.sleep(0.1)
+            # Process trolley commands
+            if component == "trolley":
+                if state == "forward":
+                    self.trolley.set_trolley_state(TrolleyMovement.FORWARD)
+                elif state == "backward":
+                    self.trolley.set_trolley_state(TrolleyMovement.BACKWARD)
+                else:
+                    self.trolley.set_trolley_state(TrolleyMovement.NEUTRAL)
 
-# Start MQTT loop and main loop
-client.loop_start()
-main_loop()
+                print(f"Trolley state updated: {state}")
+
+            elif command == "increment_speed":
+                self.trolley.increment_speed()
+                print("Speed incremented.")
+
+            elif command == "stop":
+                self.trolley.stop()
+                print("Trolley stopped.")
+
+            elif command == "release_stop":
+                self.trolley.emergency_stop = False
+                self.trolley.speed = 0.2  # Reset speed to minimum
+                print("Emergency stop released.")
+
+            elif command == "emergency_stop":
+                self.trolley.emergency_stop = True
+                self.trolley.direction = TrolleyMovement.NEUTRAL
+                print("Emergency stop activated.")
+
+            else:
+                print("Unknown command received.")
+
+        except json.JSONDecodeError:
+            print("Invalid message format. Could not parse JSON.")
+
+    def on_subscribe(self, client, userdata, mid, granted_qos, properties=None):
+        """Callback for successful subscription to a topic."""
+        print(f"Subscribed: mid={mid}, QoS={granted_qos}")
+
+    def on_publish(self, client, userdata, mid, properties=None):
+        """Callback for successful message publishing."""
+        print(f"Message published: mid={mid}")
+
+    # Main loop
+    def main_loop(self):
+        """Main loop to continuously update trolley position."""
+        self.client.loop_start()
+        last_update_time = time.time()
+
+        try:
+            while self.running:
+                current_time = time.time()
+                delta_time = current_time - last_update_time
+
+                if not self.trolley.emergency_stop:
+                    self.trolley.update_position(delta_time)
+
+                last_update_time = current_time
+                time.sleep(0.1)
+
+        except KeyboardInterrupt:
+            print("Stopping Trolley Controller.")
+            self.running = False
+            self.client.loop_stop()
+
+
+if __name__ == "__main__":
+    controller = TrolleyController()
+    controller.main_loop()
