@@ -14,7 +14,7 @@ var serviceProvider = new ServiceCollection()
 
 
 var hiveClient = serviceProvider.GetRequiredService<IHiveMQService>();
-var spreaderService = serviceProvider.GetRequiredService<ISpreaderService>();
+var spreaderService = serviceProvider.GetRequiredService<ITrolleyService>();
 await hiveClient.ConnectAsync();
 #endregion
 
@@ -25,5 +25,7 @@ await hiveClient.SubscribeServiceAsync(TrolleyRoutes.BaseSubscribeWildcard);
 
 while (true)
 {
+    Console.WriteLine("listening");
 
+    await Task.Delay(1000);
 }
