@@ -37,20 +37,20 @@ while (true)
 {
     Console.WriteLine("listening");
 
-    if (counter <= 5)
-    {
-        await hiveClient.PublishServiceAsync("/hub/gantry/right", gantryRightString);
-    }
-    if (counter == 6)
-    {
-        await hiveClient.PublishServiceAsync("/hub/gantry/neutral", gantryNeutralString);
-    }
-    if (counter > 6)
-    {
-        await hiveClient.PublishServiceAsync("/hub/gantry/left", gantryLeftString);
-    }
+    //if (counter <= 5)
+    //{
+    //    await hiveClient.PublishServiceAsync("/hub/gantry/right", gantryRightString);
+    //}
+    //if (counter == 6)
+    //{
+    //    await hiveClient.PublishServiceAsync("/hub/gantry/neutral", gantryNeutralString);
+    //}
+    //if (counter > 6)
+    //{
+    //    await hiveClient.PublishServiceAsync("/hub/gantry/left", gantryLeftString);
+    //}
 
-    counter++;
+    //counter++;
 
     await Task.Delay(1000);
 
