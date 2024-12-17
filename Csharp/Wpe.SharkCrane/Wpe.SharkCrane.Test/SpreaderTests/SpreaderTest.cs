@@ -20,10 +20,9 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
         public void CreateSpreaderObject_WithValidParameters_ReturnsSpreaderObjectWithCorrectProperties()
         {
             // Arrange
-            double width = 5;
+            double width = 7;
             bool isLocked = false;
             
-
             // Act
             Spreader spreader = new Spreader { IsLocked = isLocked, Width = width };
 
@@ -40,7 +39,24 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             // Arrange
             double width = 15;
             bool isLocked = true;
-            double expectedWidth = 12.5d;
+            double expectedWidth = 14d;
+
+            // Act
+            Spreader spreader = new Spreader { IsLocked = isLocked, Width = width };
+
+            // Assert
+            Assert.NotNull(spreader);
+            Assert.Equal(expectedWidth, spreader.Width);
+            Assert.Equal(isLocked, spreader.IsLocked);
+        }
+
+        [Fact]
+        public void CreateSpreaderObject_WithWidthLowerThanMinimum_ReturnsSpreaderObjectWithCorrectedProperties()
+        {
+            // Arrange
+            double width = 2d;
+            bool isLocked = true;
+            double expectedWidth = 6.06d;
 
             // Act
             Spreader spreader = new Spreader { IsLocked = isLocked, Width = width };
@@ -59,8 +75,9 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             var spreaderService = new SpreaderService(mockHiveMQService.Object);
 
             
-            var spreader = new Spreader { Increment = 5d };
-            var expectedValue = spreaderService.MainSpreader.Width + spreader.Increment;
+            var spreader = new Spreader { Increment = 0.2d};
+            var calculatedWidth = spreaderService.StorageSpreader.Width + spreader.Increment;
+            var expectedValue = calculatedWidth >= 14d ? 14d : calculatedWidth;
             const string topic = SpreaderRoutes.SubscribeOpen;
 
             // Act
@@ -68,7 +85,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(expectedValue, spreaderService.MainSpreader.Width);
+            Assert.Equal(expectedValue, spreaderService.StorageSpreader.Width);
         }
 
 
@@ -80,8 +97,10 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
             var spreaderService = new SpreaderService(mockHiveMQService.Object);
 
             
-            var spreader = new Spreader { Increment = 5 };
-            var expectedValue = spreaderService.MainSpreader.Width - spreader.Increment;
+            var spreader = new Spreader { Increment = 0.2d };
+            spreaderService.StorageSpreader.Width = 10d;
+            var calculatedWidth = spreaderService.StorageSpreader.Width - spreader.Increment;
+            var expectedValue = calculatedWidth <= 0 ? 0 : calculatedWidth;
             const string topic = SpreaderRoutes.SubscribeClose;
 
             // Act
@@ -89,7 +108,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(expectedValue, spreaderService.MainSpreader.Width);
+            Assert.Equal(expectedValue, spreaderService.StorageSpreader.Width);
         }
         [Fact]
         public void ChangeMainProperties_SubscribeLock_UpdatesLockSuccessfully()
@@ -108,7 +127,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(spreader.IsLocked, spreaderService.MainSpreader.IsLocked);
+            Assert.Equal(spreader.IsLocked, spreaderService.StorageSpreader.IsLocked);
         }
         [Fact]
         public void ChangeMainProperties_SubscribeUnLock_UpdatesLockSuccessfully()
@@ -127,7 +146,7 @@ namespace Wpe.SharkCrane.Test.SpreaderTests
 
             // Assert
             Assert.True(result.IsSuccess, "Expected ChangeMainProperties to succeed.");
-            Assert.Equal(spreader.IsLocked, spreaderService.MainSpreader.IsLocked);
+            Assert.Equal(spreader.IsLocked, spreaderService.StorageSpreader.IsLocked);
         }
         [Fact]
         public void ChangeMainProperties_WithInvalidTopic_ReturnsError()
