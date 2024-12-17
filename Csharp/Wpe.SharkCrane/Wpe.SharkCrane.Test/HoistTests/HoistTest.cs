@@ -15,7 +15,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
     public class HoistTest
     {
         [Fact]
-        public void CreateHoistObject_WithValidParameters_ReturnsSpreaderObjectWithCorrectProperties()
+        public void CreateHoistObject_WithValidParameters_ReturnsTrolleyObjectWithCorrectProperties()
         {
             // Arrange
             double length = 5d;
@@ -30,7 +30,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
         }
 
         [Fact]
-        public void CreateHoistObject_WithLengthLowerThanMinimum_ReturnsSpreaderObjectWithCorrectedProperties()
+        public void CreateHoistObject_WithLengthLowerThanMinimum_ReturnsTrolleyObjectWithCorrectedProperties()
         {
             // Arrange
             double length = -5d;
@@ -43,7 +43,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
             Assert.Equal(expectedLength, hoist.Length);
         }
         [Fact]
-        public void CreateHoistObject_WithLengthHigherThanMaximum_ReturnsSpreaderObjectWithCorrectedProperties()
+        public void CreateHoistObject_WithLengthHigherThanMaximum_ReturnsTrolleyObjectWithCorrectedProperties()
         {
             // Arrange
             double length = 110d;
@@ -121,7 +121,7 @@ namespace Wpe.SharkCrane.Test.HoistTests
         }
 
         [Fact]
-        public void ChangeMainProperties_WithNullSpreader_ReturnsError()
+        public void ChangeMainProperties_WithNullHoist_ReturnsError()
         {
             // Arrange
             var mockHiveMQService = new Moq.Mock<IHiveMQService>();

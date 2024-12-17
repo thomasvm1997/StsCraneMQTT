@@ -36,20 +36,20 @@ while (true)
 {
     Console.WriteLine("listening");
 
-    if (counter <= 4)
-    {
-        await hiveClient.PublishServiceAsync("/hub/hoist/down", hoistDownString);
-    }
-    if (counter == 6)
-    {
-        await hiveClient.PublishServiceAsync("/hub/hoist/neutral", hoistNeutralString);
-    }
-    if (counter >= 6)
-    {
-        await hiveClient.PublishServiceAsync("/hub/hoist/up", hoistUptring);
-    }
+    //if (counter <= 4)
+    //{
+    //    await hiveClient.PublishServiceAsync("/hub/hoist/down", hoistDownString);
+    //}
+    //if (counter == 6)
+    //{
+    //    await hiveClient.PublishServiceAsync("/hub/hoist/neutral", hoistNeutralString);
+    //}
+    //if (counter >= 6)
+    //{
+    //    await hiveClient.PublishServiceAsync("/hub/hoist/up", hoistUptring);
+    //}
 
-    counter++;
+    //counter++;
 
     await Task.Delay(1000);
 
